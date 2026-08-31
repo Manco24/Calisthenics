@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Schede">
+  <meta name="theme-color" content="#000000">
+  <title>Schede allenamento</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect fill='%23000000' width='192' height='192'/><text x='50%' y='50%' font-size='100' font-weight='bold' fill='%23ffffff' text-anchor='middle' dominant-baseline='central'>S</text></svg>">
+</head>
+<body>
+
+<!-- LIVELLO 1: MENU PRINCIPALE -->
+<div class="screen active" id="menu">
+  <div class="menu-header">
+    <h1>Le mie schede</h1>
+    <p>Scegli il tipo di allenamento</p>
+  </div>
+  <div class="menu-grid">
+    <button class="nav-btn" onclick="showScreen('sub-spinta')">
+      <div class="nav-icon icon-push">S</div>
+      <div class="info">
+        <div class="label">Spinta</div>
+        <div class="sub">2 schede</div>
+      </div>
+      <div class="chevron">›</div>
+    </button>
+    <button class="nav-btn" onclick="showScreen('sub-tirata')">
+      <div class="nav-icon icon-pull">T</div>
+      <div class="info">
+        <div class="label">Tirata</div>
+        <div class="sub">4 schede</div>
+      </div>
+      <div class="chevron">›</div>
+    </button>
+  </div>
+</div>
+
+<!-- LIVELLO 2a: SOTTOMENU SPINTA -->
+<div class="screen" id="sub-spinta">
+  <div class="top-bar">
+    <button class="back-btn" onclick="showScreen('menu')">‹</button>
+    <h2>Spinta</h2>
+  </div>
+  <div class="menu-grid">
+    <button class="nav-btn" onclick="showScreen('spinta-1')">
+      <div class="nav-icon icon-push">1</div>
+      <div class="info">
+        <div class="label">Spinta 1</div>
+        <div class="sub">Variante A</div>
+      </div>
+      <div class="chevron">›</div>
+    </button>
+    <button class="nav-btn" onclick="showScreen('spinta-2')">
+      <div class="nav-icon icon-push">2</div>
+      <div class="info">
+        <div class="label">Spinta 2</div>
+        <div class="sub">Variante B</div>
+      </div>
+      <div class="chevron">›</div>
+    </button>
+  </div>
+</div>
+
+<!-- LIVELLO 2b: SOTTOMENU TIRATA -->
+<div class="screen" id="sub-tirata">
+  <div class="top-bar">
+    <button class="back-btn" onclick="showScreen('menu')">‹</button>
+    <h2>Tirata</h2>
+  </div>
+  <div class="menu-grid">
+    <button class="nav-btn" onclick="showScreen('tirata-1')">
+      <div class="nav-icon icon-pull">1</div>
+      <div class="info">
+        <div class="label">Tirata 1</div>
+        <div class="sub">Variante A</div>
+      </div>
+      <div class="chevron">›</div>
+    </button>
+    <button class="nav-btn" onclick="showScreen('tirata-2')">
+      <div class="nav-icon icon-pull">2</div>
+      <div class="info">
+        <div class="label">Tirata 2</div>
+        <div class="sub">Variante B</div>
+      </div>
+      <div class="chevron">›</div>
+    </button>
+    <button class="nav-btn" onclick="showScreen('tirata-3')">
+      <div class="nav-icon icon-pull">3</div>
+      <div class="info">
+        <div class="label">Tirata 3</div>
+        <div class="sub">Variante C</div>
+      </div>
+      <div class="chevron">›</div>
+    </button>
+    <button class="nav-btn" onclick="showScreen('tirata-4')">
+      <div class="nav-icon icon-pull">4</div>
+      <div class="info">
+        <div class="label">Tirata 4</div>
+        <div class="sub">Variante D</div>
+      </div>
+      <div class="chevron">›</div>
+    </button>
+  </div>
+</div>
+
+<!-- LIVELLO 3: SCHEDE SPINTA -->
+<div class="screen" id="spinta-1">
+  <div class="top-bar">
+    <button class="back-btn" onclick="showScreen('sub-spinta')">‹</button>
+    <h2>Scheda Spinta A</h2>
+  </div>
+  
+  <div class="sheet-image-container">
+    <img src="img/spinta-1.png" alt="Scheda Spinta 1" class="sheet-img" onclick="zoomImage(this.src)">
+  </div>
+</div>
+
+<div class="screen" id="spinta-2">
+  <div class="top-bar">
+    <button class="back-btn" onclick="showScreen('sub-spinta')">‹</button>
+    <h2>Scheda Spinta B</h2>
+  </div>
+  
+  <div class="sheet-image-container">
+    <img src="img/Scheda_B_Spinta.png" alt="Scheda Spinta B" class="sheet-img" onclick="zoomImage(this.src)">
+  </div>
+</div>
+
+<!-- LIVELLO 3: SCHEDE TIRATA -->
+<div class="screen" id="tirata-1">
+  <div class="top-bar">
+    <button class="back-btn" onclick="showScreen('sub-tirata')">‹</button>
+    <h2>Scheda Tirata 1</h2>
+  </div>
+
+  <div class="sheet-image-container">
+    <img src="img/Scheda_A_Tirata.png" alt="Scheda Tirata 1" class="sheet-img" onclick="zoomImage(this.src)">
+  </div>
+</div>
+
+<div class="screen" id="tirata-2">
+  <div class="top-bar">
+    <button class="back-btn" onclick="showScreen('sub-tirata')">‹</button>
+    <h2>Scheda Tirata 2</h2>
+  </div>
+
+  <div class="sheet-image-container">
+    <img src="img/Scheda_B_Tirata.png" alt="Scheda Tirata 2" class="sheet-img" onclick="zoomImage(this.src)">
+  </div>
+</div>
+
+
+
+
+
+<div class="screen" id="tirata-3">
+  <div class="top-bar">
+    <button class="back-btn" onclick="showScreen('sub-tirata')">‹</button>
+    <h2>Tirata 3</h2>
+  </div>
+  <div class="exercise-list">
+    <div class="exercise">
+      <div class="name">Esercizio 1</div>
+      <div class="sets">da compilare</div>
+    </div>
+  </div>
+  <div class="placeholder-note">Mandami gli esercizi di questa scheda per completarla</div>
+</div>
+
+<div class="screen" id="tirata-4">
+  <div class="top-bar">
+    <button class="back-btn" onclick="showScreen('sub-tirata')">‹</button>
+    <h2>Tirata 4</h2>
+  </div>
+  <div class="exercise-list">
+    <div class="exercise">
+      <div class="name">Esercizio 1</div>
+      <div class="sets">da compilare</div>
+    </div>
+  </div>
+  <div class="placeholder-note">Mandami gli esercizi di questa scheda per completarla</div>
+</div>
+
+<!-- MODALE ZOOM PER LE IMMAGINI -->
+<div id="imageModal" class="image-modal" onclick="closeZoom()">
+  <img id="modalImg" src="" alt="Scheda ingrandita">
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
