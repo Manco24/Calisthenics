@@ -1,9 +1,9 @@
 :root {
-  --bg: #0f1015;
-  --bg-gradient: linear-gradient(135deg, #0f1015 0%, #1a1d27 100%);
-  --card: #1d1f27;
-  --card-border: #2a2d38;
-  --card-hover: #252a37;
+  --bg: #0b0d12;
+  --bg-gradient: radial-gradient(circle at 50% -10%, #29313d 0%, #141820 38%, #0b0d12 78%);
+  --card: rgba(27, 31, 40, 0.86);
+  --card-border: rgba(255, 255, 255, 0.1);
+  --card-hover: rgba(39, 46, 58, 0.96);
   --text: #f2f2f0;
   --text-dim: #9a9ba3;
   --accent: #d9e04c;
@@ -31,12 +31,16 @@ html, body {
   letter-spacing: 0.3px;
 }
 
+body {
+  overflow-x: hidden;
+}
+
 .screen {
   display: none;
   min-height: 100vh;
   max-width: 560px;
   margin: 0 auto;
-  padding: max(24px, env(safe-area-inset-top)) 20px 40px;
+  padding: max(28px, env(safe-area-inset-top)) 20px 48px;
   animation: fadeInUp 0.5s ease-out forwards;
 }
 
@@ -56,7 +60,7 @@ html, body {
 }
 
 .menu-header { 
-  margin-bottom: 28px;
+  margin-bottom: 34px;
   animation: slideDown 0.6s ease-out;
   max-width: 500px;
   margin-left: auto;
@@ -101,8 +105,8 @@ html, body {
 }
 
 .menu-header h1 {
-  font-size: 28px;
-  font-weight: 700;
+  font-size: clamp(28px, 8vw, 36px);
+  font-weight: 800;
   margin: 0 0 8px;
   letter-spacing: -0.5px;
   background: linear-gradient(135deg, var(--accent) 0%, var(--accent-dim) 100%);
@@ -116,6 +120,7 @@ html, body {
   color: var(--text-dim);
   font-size: 14px;
   font-weight: 500;
+  line-height: 1.5;
 }
 
 @keyframes slideDown {
@@ -133,18 +138,18 @@ html, body {
   display: flex;
   align-items: center;
   gap: 12px;
-  margin-bottom: 24px;
+  margin-bottom: 28px;
   animation: slideDown 0.6s ease-out;
 }
 
 .back-btn {
-  background: var(--card);
+  background: rgba(255, 255, 255, 0.06);
   border: 1px solid var(--card-border);
   color: var(--text);
-  width: 38px;
-  height: 38px;
+  width: 42px;
+  height: 42px;
   border-radius: 12px;
-  font-size: 18px;
+  font-size: 24px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -166,8 +171,8 @@ html, body {
 }
 
 .top-bar h2 {
-  font-size: 20px;
-  font-weight: 700;
+  font-size: 24px;
+  font-weight: 800;
   margin: 0;
   letter-spacing: -0.3px;
 }
@@ -187,13 +192,13 @@ html, body {
   gap: 14px;
   background: var(--card);
   border: 1.5px solid var(--card-border);
-  border-radius: 18px;
-  padding: 18px 16px;
+  border-radius: 20px;
+  padding: 20px 18px;
   text-align: left;
   color: var(--text);
   font-family: inherit;
   cursor: pointer;
-  transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  transition: transform 0.25s ease, background 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
   position: relative;
   overflow: hidden;
 }
@@ -217,7 +222,7 @@ html, body {
   background: var(--card-hover);
   border-color: var(--accent);
   box-shadow: 0 8px 24px rgba(217, 224, 76, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.1);
-  transform: translateY(-4px);
+  transform: translateY(-3px);
 }
 
 .nav-btn:active {
@@ -271,8 +276,8 @@ html, body {
 }
 
 .nav-btn .label {
-  font-size: 16px;
-  font-weight: 600;
+  font-size: 17px;
+  font-weight: 700;
   margin-bottom: 2px;
   letter-spacing: -0.2px;
 }
@@ -329,7 +334,7 @@ html, body {
 .exercise-list {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
   max-width: 500px;
   margin: 0 auto;
   animation: fadeInUp 0.5s ease-out 0.1s forwards;
@@ -343,21 +348,23 @@ html, body {
 .exercise {
   background: var(--card);
   border: 1px solid var(--card-border);
-  border-radius: 16px;
-  padding: 14px 16px;
+  border-radius: 18px;
+  padding: 17px 16px;
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.12);
   transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
 .exercise:hover {
   background: var(--card-hover);
   border-color: var(--accent);
-  transform: translateX(4px);
+  transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(217, 224, 76, 0.1);
 }
 
 .exercise .name {
   font-size: 15px;
-  font-weight: 600;
+  font-weight: 700;
+  line-height: 1.35;
   margin-bottom: 2px;
   letter-spacing: -0.2px;
 }
@@ -491,6 +498,19 @@ html, body {
   line-height: 1.25;
 }
 
+.set-progress {
+  display: inline-block;
+  margin: 7px 0 0 6px;
+  padding: 4px 8px;
+  border: 1px solid currentColor;
+  border-radius: 6px;
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.07);
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
 .ex-note {
   margin-top: 10px;
   color: var(--text-dim);
@@ -518,8 +538,8 @@ html, body {
 .rest-button,
 .rest-timer-actions button {
   border: 1px solid rgba(217, 224, 76, 0.45);
-  border-radius: 8px;
-  padding: 8px 10px;
+  border-radius: 10px;
+  padding: 10px 12px;
   background: rgba(217, 224, 76, 0.12);
   color: var(--accent);
   font: inherit;
@@ -533,18 +553,25 @@ html, body {
   transform: scale(0.97);
 }
 
+.rest-button:hover,
+.rest-timer-actions button:hover {
+  background: rgba(217, 224, 76, 0.22);
+  box-shadow: 0 4px 14px rgba(217, 224, 76, 0.15);
+}
+
 .rest-timer {
   position: fixed;
   z-index: 20;
-  right: 12px;
-  bottom: 12px;
-  left: 12px;
+  right: 16px;
+  bottom: max(16px, env(safe-area-inset-bottom));
+  left: 16px;
   display: none;
-  padding: 14px;
-  border: 1px solid var(--accent);
-  border-radius: 16px;
-  background: rgba(20, 21, 26, 0.98);
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.45);
+  padding: 18px;
+  border: 1px solid rgba(217, 224, 76, 0.55);
+  border-radius: 20px;
+  background: rgba(17, 20, 27, 0.94);
+  box-shadow: 0 16px 42px rgba(0, 0, 0, 0.58);
+  backdrop-filter: blur(14px);
   text-align: center;
 }
 
@@ -559,7 +586,7 @@ html, body {
 }
 
 .rest-timer-countdown {
-  margin: 2px 0 8px;
+  margin: 8px 0 14px;
   color: var(--accent);
   font-size: clamp(48px, 16vw, 76px);
   font-variant-numeric: tabular-nums;
@@ -577,6 +604,32 @@ html, body {
   border-color: rgba(255, 255, 255, 0.25);
   background: transparent;
   color: var(--text);
+}
+
+button:focus-visible {
+  outline: 3px solid rgba(217, 224, 76, 0.75);
+  outline-offset: 3px;
+}
+
+@media (min-width: 600px) {
+  .screen {
+    padding-top: 48px;
+  }
+
+  .menu-grid,
+  .exercise-list {
+    max-width: 540px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 
 .placeholder-note {

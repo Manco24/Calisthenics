@@ -34,6 +34,7 @@ function closeZoom() {
 let activeTimer = null;
 let timerInterval = null;
 let wakeLock = null;
+let audioContext = null;
 
 function parseRestTimes(text) {
   const times = [];
@@ -84,20 +85,47 @@ function createTimerOverlay() {
   return overlay;
 }
 
-function beep() {
+async function beep() {
   const AudioContext = window.AudioContext || window.webkitAudioContext;
   if (!AudioContext) return;
 
-  const context = new AudioContext();
-  const oscillator = context.createOscillator();
-  const gain = context.createGain();
-  oscillator.frequency.value = 880;
-  gain.gain.setValueAtTime(0.15, context.currentTime);
-  gain.gain.exponentialRampToValueAtTime(0.001, context.currentTime + 0.35);
-  oscillator.connect(gain);
-  gain.connect(context.destination);
-  oscillator.start();
-  oscillator.stop(context.currentTime + 0.35);
+  if (!audioContext) audioContext = new AudioContext();
+  const context = audioContext;
+  if (context.state === 'suspended') {
+    try {
+      await context.resume();
+    } catch (error) {
+      console.error('Impossibile riprodurre il suono del timer:', error);
+      return;
+    }
+  }
+
+  const startTime = context.currentTime;
+  [880, 660, 880].forEach((frequency, index) => {
+    const oscillator = context.createOscillator();
+    const gain = context.createGain();
+    const noteStart = startTime + index * 0.35;
+    oscillator.type = 'square';
+    oscillator.frequency.value = frequency;
+    gain.gain.setValueAtTime(0.3, noteStart);
+    gain.gain.exponentialRampToValueAtTime(0.001, noteStart + 0.28);
+    oscillator.connect(gain);
+    gain.connect(context.destination);
+    oscillator.start(noteStart);
+    oscillator.stop(noteStart + 0.28);
+  });
+}
+
+function prepareAudio() {
+  const AudioContext = window.AudioContext || window.webkitAudioContext;
+  if (!AudioContext) return;
+
+  if (!audioContext) audioContext = new AudioContext();
+  if (audioContext.state === 'suspended') {
+    audioContext.resume().catch(error => {
+      console.error('Impossibile attivare l’audio del timer:', error);
+    });
+  }
 }
 
 async function requestWakeLock() {
@@ -128,12 +156,13 @@ function updateTimerDisplay() {
     completedTimer.overlay.classList.remove('visible');
     releaseWakeLock();
     if ('vibrate' in navigator) navigator.vibrate([250, 100, 250]);
-    beep();
+    void beep();
   }
 }
 
 function startTimer(seconds, label, overlay) {
   if (activeTimer) stopTimer();
+  prepareAudio();
   activeTimer = { endTime: Date.now() + seconds * 1000, overlay };
   overlay.querySelector('.rest-timer-label').textContent = label;
   overlay.classList.add('visible');
@@ -151,22 +180,61 @@ function stopTimer() {
   releaseWakeLock();
 }
 
+function getSetCount(exercise) {
+  const badge = exercise.querySelector('.badge');
+  if (!badge) return null;
+
+  const counts = [...badge.textContent.matchAll(/(\d+)(?:\s*-\s*(\d+))?\s*[xX]/g)]
+    .map(match => Number(match[2] || match[1]));
+  return counts.length > 0 ? counts.reduce((total, count) => total + count, 0) : null;
+}
+
+function setupSetProgress(exercise) {
+  const totalSets = getSetCount(exercise);
+  if (totalSets === null) return;
+
+  const progress = document.createElement('span');
+  progress.className = 'set-progress';
+  progress.textContent = `0/${totalSets}`;
+  progress.dataset.completed = '0';
+  progress.dataset.total = String(totalSets);
+  progress.setAttribute('aria-label', `Serie completate: 0 di ${totalSets}`);
+  exercise.querySelector('.ex-title-wrap').appendChild(progress);
+}
+
+function completeSet(exercise) {
+  const progress = exercise.querySelector('.set-progress');
+  if (!progress) return;
+
+  const completed = Number(progress.dataset.completed);
+  const total = Number(progress.dataset.total);
+  const nextCompleted = Math.min(completed + 1, total);
+  progress.dataset.completed = String(nextCompleted);
+  progress.textContent = `${nextCompleted}/${total}`;
+  progress.setAttribute('aria-label', `Serie completate: ${nextCompleted} di ${total}`);
+}
+
 function setupRestTimers() {
   const overlay = createTimerOverlay();
   document.querySelectorAll('.exercise').forEach(exercise => {
+    setupSetProgress(exercise);
     const meta = exercise.querySelector('.ex-meta');
     if (!meta) return;
 
     const controls = document.createElement('div');
     controls.className = 'rest-controls';
     meta.querySelectorAll('span').forEach(span => {
+      const isSetRest = /\b(?:riposo|tra)[^]*\bserie\b/i.test(span.textContent);
       parseRestTimes(span.textContent).forEach(time => {
         const button = document.createElement('button');
         const label = time.prefix || 'Riposo';
         button.type = 'button';
         button.className = 'rest-button';
         button.textContent = `Avvia ${label} (${formatTime(time.seconds)})`;
-        button.addEventListener('click', () => startTimer(time.seconds, label, overlay));
+        button.addEventListener('click', () => {
+          if (isSetRest) completeSet(exercise);
+          startTimer(time.seconds, label, overlay);
+        });
         controls.appendChild(button);
       });
     });
