@@ -1,34 +1,25 @@
 {
-  "name": "Schede Allenamento",
+  "name": "Le mie schede",
   "short_name": "Schede",
-  "description": "Le mie schede di allenamento personali",
-  "start_url": "/",
-  "scope": "/",
+  "description": "Le mie schede di allenamento calisthenics",
+  "start_url": "./index.html",
+  "scope": "./",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#000000",
+  "background_color": "#14151a",
+  "theme_color": "#14151a",
   "orientation": "portrait",
   "icons": [
     {
-      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect fill='%23000000' width='192' height='192'/><text x='50%' y='50%' font-size='100' font-weight='bold' fill='%23ffffff' text-anchor='middle' dominant-baseline='central'>S</text></svg>",
+      "src": "icon-192.svg",
       "sizes": "192x192",
       "type": "image/svg+xml",
       "purpose": "any"
     },
     {
-      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect fill='%23000000' width='512' height='512'/><text x='50%' y='50%' font-size='300' font-weight='bold' fill='%23ffffff' text-anchor='middle' dominant-baseline='central'>S</text></svg>",
+      "src": "icon-512.svg",
       "sizes": "512x512",
       "type": "image/svg+xml",
       "purpose": "any maskable"
-    }
-  ],
-  "categories": ["lifestyle", "productivity"],
-  "screenshots": [
-    {
-      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 540 720'><rect fill='%23f5f5f5' width='540' height='720'/><text x='50%' y='50%' font-size='60' font-weight='bold' fill='%23000000' text-anchor='middle' dominant-baseline='central'>Schede</text></svg>",
-      "sizes": "540x720",
-      "type": "image/svg+xml",
-      "form_factor": "narrow"
     }
   ]
 }

@@ -2,26 +2,38 @@
 <html lang="it">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#14151a">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
   <meta name="apple-mobile-web-app-title" content="Schede">
-  <meta name="theme-color" content="#000000">
   <title>Schede allenamento</title>
   <link rel="stylesheet" href="style.css">
   <link rel="manifest" href="manifest.json">
-  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect fill='%23000000' width='192' height='192'/><text x='50%' y='50%' font-size='100' font-weight='bold' fill='%23ffffff' text-anchor='middle' dominant-baseline='central'>S</text></svg>">
+  <link rel="apple-touch-icon" href="icon-192.svg">
+  <link rel="icon" type="image/svg+xml" href="icon-192.svg">
+  <script>
+    if ('serviceWorker' in navigator && ['http:', 'https:'].includes(window.location.protocol)) {
+      navigator.serviceWorker.register('./sw.js')
+        .catch(error => console.error('Registrazione service worker fallita:', error));
+    }
+  </script>
 </head>
 <body>
 
 <!-- LIVELLO 1: MENU PRINCIPALE -->
 <div class="screen active" id="menu">
   <div class="menu-header">
+    <div class="calisthenics-mark" aria-hidden="true">
+      <span class="bar"></span>
+      <span class="ring ring-left"></span>
+      <span class="ring ring-right"></span>
+    </div>
     <h1>Le mie schede</h1>
     <p>Scegli il tipo di allenamento</p>
   </div>
   <div class="menu-grid">
-    <button class="nav-btn" onclick="showScreen('sub-spinta')">
+    <button class="nav-btn route-push" onclick="showScreen('sub-spinta')">
       <div class="nav-icon icon-push">S</div>
       <div class="info">
         <div class="label">Spinta</div>
@@ -29,7 +41,7 @@
       </div>
       <div class="chevron">›</div>
     </button>
-    <button class="nav-btn" onclick="showScreen('sub-tirata')">
+    <button class="nav-btn route-pull" onclick="showScreen('sub-tirata')">
       <div class="nav-icon icon-pull">T</div>
       <div class="info">
         <div class="label">Tirata</div>
@@ -47,7 +59,7 @@
     <h2>Spinta</h2>
   </div>
   <div class="menu-grid">
-    <button class="nav-btn" onclick="showScreen('spinta-1')">
+    <button class="nav-btn route-push" onclick="showScreen('spinta-1')">
       <div class="nav-icon icon-push">1</div>
       <div class="info">
         <div class="label">Spinta 1</div>
@@ -55,7 +67,7 @@
       </div>
       <div class="chevron">›</div>
     </button>
-    <button class="nav-btn" onclick="showScreen('spinta-2')">
+    <button class="nav-btn route-push" onclick="showScreen('spinta-2')">
       <div class="nav-icon icon-push">2</div>
       <div class="info">
         <div class="label">Spinta 2</div>
@@ -73,7 +85,7 @@
     <h2>Tirata</h2>
   </div>
   <div class="menu-grid">
-    <button class="nav-btn" onclick="showScreen('tirata-1')">
+    <button class="nav-btn route-pull" onclick="showScreen('tirata-1')">
       <div class="nav-icon icon-pull">1</div>
       <div class="info">
         <div class="label">Tirata 1</div>
@@ -81,7 +93,7 @@
       </div>
       <div class="chevron">›</div>
     </button>
-    <button class="nav-btn" onclick="showScreen('tirata-2')">
+    <button class="nav-btn route-pull" onclick="showScreen('tirata-2')">
       <div class="nav-icon icon-pull">2</div>
       <div class="info">
         <div class="label">Tirata 2</div>
@@ -89,7 +101,7 @@
       </div>
       <div class="chevron">›</div>
     </button>
-    <button class="nav-btn" onclick="showScreen('tirata-3')">
+    <button class="nav-btn route-pull" onclick="showScreen('tirata-3')">
       <div class="nav-icon icon-pull">3</div>
       <div class="info">
         <div class="label">Tirata 3</div>
@@ -97,7 +109,7 @@
       </div>
       <div class="chevron">›</div>
     </button>
-    <button class="nav-btn" onclick="showScreen('tirata-4')">
+    <button class="nav-btn route-pull" onclick="showScreen('tirata-4')">
       <div class="nav-icon icon-pull">4</div>
       <div class="info">
         <div class="label">Tirata 4</div>
@@ -112,22 +124,134 @@
 <div class="screen" id="spinta-1">
   <div class="top-bar">
     <button class="back-btn" onclick="showScreen('sub-spinta')">‹</button>
-    <h2>Scheda Spinta A</h2>
+    <h2>Spinta 1</h2>
   </div>
-  
-  <div class="sheet-image-container">
-    <img src="img/spinta-1.png" alt="Scheda Spinta 1" class="sheet-img" onclick="zoomImage(this.src)">
+
+  <div class="exercise-list">
+    <div class="exercise">
+      <div class="ex-head">
+        <div class="ex-num">1</div>
+        <div class="ex-title-wrap">
+          <div class="name">Piegamenti in verticale a mani strette e con rialzo sotto la testa</div>
+          <span class="badge">6 x 3</span>
+        </div>
+      </div>
+      <div class="ex-note"><b>Note:</b> useremo un rialzo sotto la testa per ridurre il ROM e rendere fattibile l'esercizio: ogni volta che le serie saranno completate con successo andiamo a ridurre il dislivello, sino appunto ad arrivare ad eseguire l'esercizio senza rialzo sotto la testa. Gli altri esercizi sono per aumentare il volume fatto, che altrimenti sarebbe troppo esiguo.</div>
+      <div class="ex-meta"><span>Riposo serie: <b>2' 30&quot;</b></span><span>// <b>3' 30&quot;</b></span></div>
+    </div>
+    <div class="exercise">
+      <div class="ex-head">
+        <div class="ex-num">2</div>
+        <div class="ex-title-wrap">
+          <div class="name">Piegamenti in verticale a mani larghe e con mano su rialzo basso</div>
+          <span class="badge">5 x 5</span>
+        </div>
+      </div>
+      <div class="ex-meta"><span>Riposo serie: <b>2' 30&quot;</b></span><span>// <b>3' 30&quot;</b></span></div>
+    </div>
+    <div class="exercise">
+      <div class="ex-head">
+        <div class="ex-num">3</div>
+        <div class="ex-title-wrap">
+          <div class="name">Dip A incremento da 1</div>
+          <span class="badge">Piramidale</span>
+        </div>
+      </div>
+      <div class="ex-note"><b>Note:</b> &quot;L'incremento da 1&quot;: facciamo 1 rep, recuperiamo 20&quot;, facciamo 2 reps, recuperiamo 40&quot;, facciamo 3 reps, recuperiamo un minuto, facciamo 4 reps, recuperiamo un minuto e venti, poi sempre ad un minuto e venti andiamo avanti finché riusciamo ad incrementare. Poi torniamo indietro sino ad 1, stessi recuperi di quando siamo saliti.</div>
+      <div class="ex-meta"><span>Riposo serie: <b>Indicato nelle note</b></span><span>// <b>2' 30&quot;</b></span></div>
+    </div>
+    <div class="exercise">
+      <div class="ex-head">
+        <div class="ex-num">4</div>
+        <div class="ex-title-wrap">
+          <div class="name">Piegamenti a terra rialzo sotto il petto da 8 cm</div>
+          <span class="badge">1 x Max</span>
+        </div>
+      </div>
+      <div class="ex-meta"><span></span><span>// <b>3' 00&quot;</b></span></div>
+    </div>
+    <div class="exercise">
+      <div class="ex-head">
+        <div class="ex-num">5</div>
+        <div class="ex-title-wrap">
+          <div class="name">Piegamenti a terra</div>
+          <span class="badge">5 x Max/2 Prec</span>
+        </div>
+      </div>
+      <div class="ex-note"><b>Note:</b> con un massimale di piegamenti su rialzo, seguiti dai piegamenti a terra, in cui si eseguono metà delle ripetizioni del massimale appena fatto nell'esercizio precedente (l'indicazione Max/2 Prec).</div>
+      <div class="ex-meta"><span>Riposo serie: <b>1' 30&quot;</b></span><span>// <b>2' 30&quot;</b></span></div>
+    </div>
+    <div class="exercise">
+      <div class="ex-head">
+        <div class="ex-num">6</div>
+        <div class="ex-title-wrap">
+          <div class="name">Barchetta</div>
+          <span class="badge">5 x 20&quot;</span>
+        </div>
+      </div>
+      <div class="ex-meta"><span>Riposo serie: <b>1' 30&quot;</b></span><span></span></div>
+    </div>
   </div>
 </div>
 
 <div class="screen" id="spinta-2">
   <div class="top-bar">
     <button class="back-btn" onclick="showScreen('sub-spinta')">‹</button>
-    <h2>Scheda Spinta B</h2>
+    <h2>Spinta 2</h2>
   </div>
-  
-  <div class="sheet-image-container">
-    <img src="img/Scheda_B_Spinta.png" alt="Scheda Spinta B" class="sheet-img" onclick="zoomImage(this.src)">
+
+  <div class="exercise-list">
+    <div class="exercise">
+      <div class="ex-head">
+        <div class="ex-num">1</div>
+        <div class="ex-title-wrap">
+          <div class="name">Piegamenti in verticale a mani strette</div>
+          <span class="badge">1xMax 4xMax/2</span>
+        </div>
+      </div>
+      <div class="ex-meta"><span>Riposo serie Max: <b>3' 30&quot;</b> | serie: <b>2' 00&quot;</b></span><span>// <b>2' 30&quot;</b></span></div>
+    </div>
+    <div class="exercise">
+      <div class="ex-head">
+        <div class="ex-num">2</div>
+        <div class="ex-title-wrap">
+          <div class="name">Dip</div>
+          <span class="badge">1 x Max</span>
+        </div>
+      </div>
+      <div class="ex-meta"><span></span><span>// <b>3' 00&quot;</b></span></div>
+    </div>
+    <div class="exercise">
+      <div class="ex-head">
+        <div class="ex-num">3</div>
+        <div class="ex-title-wrap">
+          <div class="name">Piegamenti a terra rialzo sotto il petto da 4 cm</div>
+          <span class="badge">4 X (12-16-20-16-12)</span>
+        </div>
+      </div>
+      <div class="ex-meta"><span>Riposo tra serie: <b>20&quot;</b></span><span>// <b>120&quot;</b></span></div>
+    </div>
+    <div class="exercise">
+      <div class="ex-head">
+        <div class="ex-num">4</div>
+        <div class="ex-title-wrap">
+          <div class="name">Piegamenti a diamante</div>
+          <span class="badge">30 reps</span>
+        </div>
+      </div>
+      <div class="ex-note"><b>Note:</b> quando impieghi meno di 6' aumenta di 10 rep.</div>
+      <div class="ex-meta"><span>Riposo: <b>a scelta</b></span><span></span></div>
+    </div>
+    <div class="exercise">
+      <div class="ex-head">
+        <div class="ex-num">5</div>
+        <div class="ex-title-wrap">
+          <div class="name">Tuck dragon flag</div>
+          <span class="badge">5 x 7</span>
+        </div>
+      </div>
+      <div class="ex-meta"><span>Riposo tra serie: <b>1' 30&quot;</b></span><span></span></div>
+    </div>
   </div>
 </div>
 
@@ -135,22 +259,133 @@
 <div class="screen" id="tirata-1">
   <div class="top-bar">
     <button class="back-btn" onclick="showScreen('sub-tirata')">‹</button>
-    <h2>Scheda Tirata 1</h2>
+    <h2>Tirata 1 - Volume</h2>
   </div>
-
-  <div class="sheet-image-container">
-    <img src="img/Scheda_A_Tirata.png" alt="Scheda Tirata 1" class="sheet-img" onclick="zoomImage(this.src)">
+  <div class="ex-note programming-note"><b>Note programmazione:</b> da seguire in questo modo 3 settimane di volume poi 2 settimane di intensità.</div>
+  <div class="exercise-list">
+    <div class="exercise">
+      <div class="ex-head">
+        <div class="ex-num">1</div>
+        <div class="ex-title-wrap">
+          <div class="name">Trazioni prone al mento alternate mezzo ROM e ROM</div>
+          <span class="badge">Ladder 1</span>
+        </div>
+      </div>
+      <div class="ex-note"><b>Note:</b> iniziare da una ripetizione per serie e aggiungere una rep ogni volta.</div>
+      <div class="ex-meta"><span>Riposo serie: <b>90&quot;</b></span><span>// <b>2' 30&quot;</b></span></div>
+    </div>
+    <div class="exercise">
+      <div class="ex-head">
+        <div class="ex-num">2</div>
+        <div class="ex-title-wrap">
+          <div class="name">Trazioni supine</div>
+          <span class="badge">30 reps totali tecniche</span>
+        </div>
+      </div>
+      <div class="ex-note"><b>Note:</b> 1&quot; fermo a metà e in alto.</div>
+      <div class="ex-meta"><span>Riposo serie: <b>90&quot;</b></span><span>// <b>2' 30&quot;</b></span></div>
+    </div>
+    <div class="exercise">
+      <div class="ex-head">
+        <div class="ex-num">3</div>
+        <div class="ex-title-wrap">
+          <div class="name">Piegamenti a terra rialzo sotto il petto da 4 cm</div>
+          <span class="badge">4 X (12-16-20-16-12)</span>
+        </div>
+      </div>
+      <div class="ex-meta"><span>Tra le serie: <b>20&quot;</b></span><span>// <b>120&quot;</b></span></div>
+    </div>
+    <div class="exercise">
+      <div class="ex-head">
+        <div class="ex-num">4</div>
+        <div class="ex-title-wrap">
+          <div class="name">Tuck Front Lever</div>
+          <span class="badge">4 x Max</span>
+        </div>
+      </div>
+      <div class="ex-meta"><span>Riposo serie: <b>90&quot;</b></span><span></span></div>
+    </div>
+    <div class="exercise">
+      <div class="ex-head">
+        <div class="ex-num">5</div>
+        <div class="ex-title-wrap">
+          <div class="name">Tuck Front Lever raise</div>
+          <span class="badge">4 x (metà dei sec max)</span>
+        </div>
+      </div>
+      <div class="ex-meta"><span>Riposo tra serie: <b>90&quot;</b></span><span></span></div>
+    </div>
+    <div class="exercise">
+      <div class="ex-head">
+        <div class="ex-num">6</div>
+        <div class="ex-title-wrap">
+          <div class="name">Leg raise o Dragon flag</div>
+          <span class="badge">3-4 x Max</span>
+        </div>
+      </div>
+      <div class="ex-meta"><span>Riposo tra serie: <b>90&quot;</b></span><span></span></div>
+    </div>
   </div>
 </div>
 
 <div class="screen" id="tirata-2">
   <div class="top-bar">
     <button class="back-btn" onclick="showScreen('sub-tirata')">‹</button>
-    <h2>Scheda Tirata 2</h2>
+    <h2>Tirata 2 - Volume</h2>
   </div>
 
-  <div class="sheet-image-container">
-    <img src="img/Scheda_B_Tirata.png" alt="Scheda Tirata 2" class="sheet-img" onclick="zoomImage(this.src)">
+  <div class="exercise-list">
+    <div class="exercise">
+      <div class="ex-head">
+        <div class="ex-num">1</div>
+        <div class="ex-title-wrap">
+          <div class="name">Trazioni prone al mento</div>
+          <span class="badge">6 x 4</span>
+        </div>
+      </div>
+      <div class="ex-note"><b>Note:</b> 2&quot; fermo a metà.</div>
+      <div class="ex-meta"><span>Riposo serie: <b>1' 30&quot;</b></span><span>// <b>2' 30&quot;</b></span></div>
+    </div>
+    <div class="exercise">
+      <div class="ex-head">
+        <div class="ex-num">2</div>
+        <div class="ex-title-wrap">
+          <div class="name">Trazioni presa larga al mento</div>
+          <span class="badge">2 x Max</span>
+        </div>
+      </div>
+      <div class="ex-meta"><span>Riposo serie: <b>2' 00&quot;</b></span><span>// <b>2' 30&quot;</b></span></div>
+    </div>
+    <div class="exercise">
+      <div class="ex-head">
+        <div class="ex-num">3</div>
+        <div class="ex-title-wrap">
+          <div class="name">Tuck Back Lever</div>
+          <span class="badge">3 x 20&quot;</span>
+        </div>
+      </div>
+      <div class="ex-meta"><span>Riposo serie: <b>1' 30&quot;</b></span><span>// <b>2' 30&quot;</b></span></div>
+    </div>
+    <div class="exercise">
+      <div class="ex-head">
+        <div class="ex-num">4</div>
+        <div class="ex-title-wrap">
+          <div class="name">Australian pull up</div>
+          <span class="badge">2 x Max</span>
+        </div>
+      </div>
+      <div class="ex-meta"><span>Riposo serie: <b>1' 30&quot;</b></span><span>// <b>2' 30&quot;</b></span></div>
+    </div>
+    <div class="exercise">
+      <div class="ex-head">
+        <div class="ex-num">5</div>
+        <div class="ex-title-wrap">
+          <div class="name">Barchetta</div>
+          <span class="badge">4 x 20&quot;</span>
+        </div>
+      </div>
+      <div class="ex-meta"><span>Riposo tra serie: <b>1' 30&quot;</b></span><span></span></div>
+    </div>
   </div>
 </div>
 
