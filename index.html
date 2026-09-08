@@ -3,7 +3,6 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#14151a">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
   <meta name="apple-mobile-web-app-title" content="Schede">
@@ -21,7 +20,7 @@
 </head>
 <body>
 
-<!-- LIVELLO 1: MENU PRINCIPALE -->
+<!-- HOME: CALENDARIO CENTRALE -->
 <div class="screen active" id="menu">
   <div class="menu-header">
     <div class="calisthenics-mark" aria-hidden="true">
@@ -29,15 +28,102 @@
       <span class="ring ring-left"></span>
       <span class="ring ring-right"></span>
     </div>
-    <h1>Le mie schede</h1>
-    <p>Scegli il tipo di allenamento</p>
+    <h1>Calendario allenamenti</h1>
+    <p>Registra e ritrova le tue sessioni</p>
+  </div>
+  <div class="week-summary" id="weekSummary" aria-live="polite"></div>
+  <section class="calendar-card" aria-label="Calendario mensile">
+    <div class="calendar-toolbar">
+      <button class="calendar-nav-btn" id="previousMonth" type="button" aria-label="Mese precedente">‹</button>
+      <h2 id="calendarTitle"></h2>
+      <button class="calendar-nav-btn" id="nextMonth" type="button" aria-label="Mese successivo">›</button>
+    </div>
+    <div class="calendar-weekdays" aria-hidden="true">
+      <span>L</span><span>M</span><span>M</span><span>G</span><span>V</span><span>S</span><span>D</span>
+    </div>
+    <div class="calendar-grid" id="calendarGrid"></div>
+    <div class="calendar-legend">
+      <span><i class="legend-dot push"></i> Spinta</span>
+      <span><i class="legend-dot pull"></i> Tirata</span>
+      <span><i class="legend-dot custom"></i> Ad hoc</span>
+    </div>
+  </section>
+  <section class="stats-dashboard" aria-labelledby="statsTitle">
+    <div class="stats-heading">
+      <div>
+        <h2 id="statsTitle">I tuoi progressi</h2>
+        <p>Una panoramica della costanza e delle serie completate.</p>
+      </div>
+      <div class="goal-control">
+        <label for="weeklyGoal">Obiettivo</label>
+        <select id="weeklyGoal" aria-label="Sessioni obiettivo settimanale">
+          <option value="2">2 sessioni</option>
+          <option value="3">3 sessioni</option>
+          <option value="4" selected>4 sessioni</option>
+          <option value="5">5 sessioni</option>
+          <option value="6">6 sessioni</option>
+          <option value="7">7 sessioni</option>
+        </select>
+      </div>
+    </div>
+    <div class="stats-cards" id="statsCards"></div>
+    <div class="chart-card">
+      <div class="chart-title-row">
+        <h3>Sessioni recenti</h3>
+        <span id="streakValue"></span>
+      </div>
+      <div class="stats-chart" id="weeklyChart" aria-label="Sessioni degli ultimi sette giorni"></div>
+      <div class="chart-axis"><span>7 giorni fa</span><span>Oggi</span></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title-row">
+        <h3>Andamento mensile</h3>
+        <span id="monthlyTotal"></span>
+      </div>
+      <div class="stats-chart monthly-chart" id="monthlyChart" aria-label="Sessioni per settimana del mese"></div>
+      <div class="chart-axis"><span>Inizio mese</span><span>Fine mese</span></div>
+    </div>
+    <div class="records-card">
+      <div class="chart-title-row">
+        <h3>Record serie</h3>
+        <span class="stats-caption">massimo salvato</span>
+      </div>
+      <div id="recordsList" class="records-list"></div>
+    </div>
+  </section>
+  <button class="calendar-history-btn" type="button" onclick="showScreen('sub-programma')">Apri le schede del programma <span>›</span></button>
+  <div class="appearance-controls" aria-label="Aspetto">
+    <button type="button" id="themeToggle" aria-pressed="false">Tema chiaro</button>
+    <button type="button" id="fontDecrease" aria-label="Riduci dimensione testo">A−</button>
+    <button type="button" id="fontIncrease" aria-label="Aumenta dimensione testo">A+</button>
+  </div>
+  <div class="data-actions" aria-label="Gestione dati">
+    <button type="button" id="exportDataButton">Esporta dati</button>
+    <button type="button" id="importDataButton">Importa dati</button>
+    <input type="file" id="importDataInput" accept="application/json" hidden>
+  </div>
+</div>
+
+<div class="day-modal" id="dayModal" aria-hidden="true">
+  <div class="day-modal-panel" role="dialog" aria-modal="true" aria-labelledby="dayModalTitle">
+    <button class="day-modal-close" id="closeDayModal" type="button" aria-label="Chiudi">×</button>
+    <h2 id="dayModalTitle"></h2>
+    <div id="dayModalContent"></div>
+  </div>
+</div>
+
+<!-- LIVELLO 2a: MENU PROGRAMMA -->
+<div class="screen" id="sub-programma">
+  <div class="top-bar">
+    <button class="back-btn" onclick="showScreen('menu')">‹</button>
+    <h2>Programma</h2>
   </div>
   <div class="menu-grid">
     <button class="nav-btn route-push" onclick="showScreen('sub-spinta')">
       <div class="nav-icon icon-push">S</div>
       <div class="info">
         <div class="label">Spinta</div>
-        <div class="sub">2 schede</div>
+        <div class="sub">Schede di spinta</div>
       </div>
       <div class="chevron">›</div>
     </button>
@@ -45,17 +131,17 @@
       <div class="nav-icon icon-pull">T</div>
       <div class="info">
         <div class="label">Tirata</div>
-        <div class="sub">4 schede</div>
+        <div class="sub">Schede di tirata</div>
       </div>
       <div class="chevron">›</div>
     </button>
   </div>
 </div>
 
-<!-- LIVELLO 2a: SOTTOMENU SPINTA -->
+<!-- LIVELLO 2b: SOTTOMENU SPINTA -->
 <div class="screen" id="sub-spinta">
   <div class="top-bar">
-    <button class="back-btn" onclick="showScreen('menu')">‹</button>
+    <button class="back-btn" onclick="showScreen('sub-programma')">‹</button>
     <h2>Spinta</h2>
   </div>
   <div class="menu-grid">
@@ -78,10 +164,10 @@
   </div>
 </div>
 
-<!-- LIVELLO 2b: SOTTOMENU TIRATA -->
+<!-- LIVELLO 2c: SOTTOMENU TIRATA -->
 <div class="screen" id="sub-tirata">
   <div class="top-bar">
-    <button class="back-btn" onclick="showScreen('menu')">‹</button>
+    <button class="back-btn" onclick="showScreen('sub-programma')">‹</button>
     <h2>Tirata</h2>
   </div>
   <div class="menu-grid">
@@ -400,8 +486,14 @@
   </div>
   <div class="exercise-list">
     <div class="exercise">
-      <div class="name">Esercizio 1</div>
-      <div class="sets">da compilare</div>
+      <div class="ex-head">
+        <div class="ex-num">1</div>
+        <div class="ex-title-wrap">
+          <div class="name">Esercizio 1</div>
+          <span class="badge">da compilare</span>
+        </div>
+      </div>
+      <div class="ex-meta"><span></span></div>
     </div>
   </div>
   <div class="placeholder-note">Mandami gli esercizi di questa scheda per completarla</div>
@@ -414,8 +506,14 @@
   </div>
   <div class="exercise-list">
     <div class="exercise">
-      <div class="name">Esercizio 1</div>
-      <div class="sets">da compilare</div>
+      <div class="ex-head">
+        <div class="ex-num">1</div>
+        <div class="ex-title-wrap">
+          <div class="name">Esercizio 1</div>
+          <span class="badge">da compilare</span>
+        </div>
+      </div>
+      <div class="ex-meta"><span></span></div>
     </div>
   </div>
   <div class="placeholder-note">Mandami gli esercizi di questa scheda per completarla</div>
@@ -427,5 +525,6 @@
 </div>
 
 <script src="script.js"></script>
+<script src="calendar-home.js"></script>
 </body>
 </html>
