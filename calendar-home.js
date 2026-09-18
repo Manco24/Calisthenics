@@ -56,6 +56,16 @@
       .map(([key, session]) => ({ key, ...session }));
   }
 
+  function getSessionLabel(session) {
+    if (session.workoutId && WORKOUTS[session.workoutId]) {
+      return WORKOUTS[session.workoutId].label;
+    }
+    if (session.title) return session.title;
+    if (session.type === 'push') return 'Spinta';
+    if (session.type === 'pull') return 'Tirata';
+    return 'Ad hoc';
+  }
+
   function countSessionsBetween(start, end) {
     return getWorkoutSessions().filter(session => {
       const date = new Date(`${session.key}T00:00:00`);
@@ -250,10 +260,17 @@
       dayLabel.textContent = String(day);
       button.appendChild(dayLabel);
       if (session) {
+        const displayLabel = getSessionLabel(session);
+        button.title = displayLabel;
+        button.setAttribute('aria-label', `${day}: ${displayLabel}`);
         const dot = document.createElement('i');
         dot.className = `day-dot ${session.type}`;
-        dot.setAttribute('aria-label', session.title);
+        dot.setAttribute('aria-hidden', 'true');
         button.appendChild(dot);
+        const sessionLabel = document.createElement('span');
+        sessionLabel.className = 'calendar-session-label';
+        sessionLabel.textContent = getSessionLabel(session);
+        button.appendChild(sessionLabel);
       }
       button.addEventListener('click', () => openDay(date));
       grid.appendChild(button);
@@ -323,10 +340,35 @@
     content.replaceChildren();
     const intro = document.createElement('p');
     intro.className = 'day-modal-intro';
-    intro.textContent = 'Scegli una scheda del programma oppure registra una sessione libera.';
+    intro.textContent = 'Che tipo di allenamento vuoi fare?';
     content.appendChild(intro);
-    Object.entries(WORKOUTS).forEach(([workoutId, workout]) => {
-      const button = createAction(`${workout.category} · ${workout.label}`, workout.type === 'push' ? 'push' : 'pull');
+
+    [
+      { type: 'push', label: 'Spinta', className: 'push' },
+      { type: 'pull', label: 'Tirata', className: 'pull' }
+    ].forEach(category => {
+      const button = createAction(category.label, category.className);
+      button.addEventListener('click', () => renderWorkoutChoices(date, content, category.type));
+      content.appendChild(button);
+    });
+  }
+
+  function renderWorkoutChoices(date, content, type) {
+    content.replaceChildren();
+
+    const backButton = createAction('‹ Torna ai tipi di allenamento', '');
+    backButton.addEventListener('click', () => renderChoices(date, content));
+    content.appendChild(backButton);
+
+    const intro = document.createElement('p');
+    intro.className = 'day-modal-intro';
+    intro.textContent = `Scegli la scheda di ${type === 'push' ? 'spinta' : 'tirata'}.`;
+    content.appendChild(intro);
+
+    Object.entries(WORKOUTS)
+      .filter(([, workout]) => workout.type === type)
+      .forEach(([workoutId, workout]) => {
+      const button = createAction(workout.label, type === 'push' ? 'push' : 'pull');
       button.addEventListener('click', () => {
         if (saveSession(date, { type: workout.type, title: workout.label, workoutId, source: 'program' })) {
           closeDay();
@@ -335,17 +377,6 @@
       });
       content.appendChild(button);
     });
-    const custom = document.createElement('form');
-    custom.className = 'custom-session-form';
-    custom.innerHTML = '<label for="customSessionTitle">Sessione ad hoc</label><div><input id="customSessionTitle" maxlength="50" required placeholder="es. Mobilità e core"><button class="day-action custom" type="submit">Salva</button></div>';
-    custom.addEventListener('submit', event => {
-      event.preventDefault();
-      const input = custom.querySelector('input');
-      const title = input.value.trim();
-      if (!title) return;
-      if (saveSession(date, { type: 'custom', title, source: 'custom' })) closeDay();
-    });
-    content.appendChild(custom);
   }
 
   function closeDay() {

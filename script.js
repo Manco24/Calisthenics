@@ -166,9 +166,11 @@ const SILENT_AUDIO_URI = 'data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEA
 function createAlarmAudioUrl() {
   const sampleRate = 22050;
   const beeps = [
-    { freq: 880, dur: 0.22, pause: 0.08 },
-    { freq: 660, dur: 0.22, pause: 0.08 },
-    { freq: 880, dur: 0.35, pause: 0 }
+    { freq: 660, dur: 0.28, pause: 0.1 },
+    { freq: 880, dur: 0.28, pause: 0.1 },
+    { freq: 1047, dur: 0.42, pause: 0.16 },
+    { freq: 880, dur: 0.28, pause: 0.1 },
+    { freq: 1047, dur: 0.55, pause: 0 }
   ];
   let totalDuration = 0;
   beeps.forEach(b => { totalDuration += b.dur + b.pause; });
@@ -203,7 +205,7 @@ function createAlarmAudioUrl() {
     for (let i = 0; i < beepSamples; i++) {
       const t = i / sampleRate;
       const envelope = Math.min(1, Math.min(i / 80, (beepSamples - i) / 80));
-      const sample = Math.sin(2 * Math.PI * freq * t) * envelope * 0.75;
+      const sample = Math.sin(2 * Math.PI * freq * t) * envelope * 0.9;
       view.setInt16(44 + (sampleOffset + i) * 2, sample < 0 ? sample * 32768 : sample * 32767, true);
     }
     sampleOffset += beepSamples + pauseSamples;
@@ -225,6 +227,8 @@ function initAudioElements() {
   if (!alarmAudio) {
     try {
       alarmAudio = new Audio(createAlarmAudioUrl());
+      alarmAudio.volume = 1;
+      alarmAudio.preload = 'auto';
     } catch (e) {
       console.warn('Alarm audio fallback non supportato:', e);
     }
@@ -307,18 +311,18 @@ async function beep() {
   }
 
   const startTime = context.currentTime;
-  [880, 660, 880].forEach((frequency, index) => {
+  [660, 880, 1047, 880, 1047].forEach((frequency, index) => {
     const oscillator = context.createOscillator();
     const gain = context.createGain();
     const noteStart = startTime + index * 0.35;
-    oscillator.type = 'square';
+    oscillator.type = 'triangle';
     oscillator.frequency.value = frequency;
-    gain.gain.setValueAtTime(0.3, noteStart);
-    gain.gain.exponentialRampToValueAtTime(0.001, noteStart + 0.28);
+    gain.gain.setValueAtTime(0.55, noteStart);
+    gain.gain.exponentialRampToValueAtTime(0.001, noteStart + 0.32);
     oscillator.connect(gain);
     gain.connect(context.destination);
     oscillator.start(noteStart);
-    oscillator.stop(noteStart + 0.28);
+    oscillator.stop(noteStart + 0.32);
   });
 }
 
@@ -577,6 +581,168 @@ function saveSetProgress(exercise, completed) {
   }
 }
 
+const DIP_PROGRESS_SUFFIX = '_dip_progress';
+
+function getDipProgressKey(exercise) {
+  const screen = exercise.closest('.screen');
+  return screen ? `${getStorageKey(exercise, screen.id)}${DIP_PROGRESS_SUFFIX}` : '';
+}
+
+function isIncrementExercise(exercise) {
+  return Boolean(exercise.dataset.dipIncrement || exercise.dataset.incrementLadder);
+}
+
+function loadDipProgress(exercise) {
+  try {
+    const saved = JSON.parse(localStorage.getItem(getDipProgressKey(exercise)) || '{}');
+    const current = Math.max(Number(saved.current) || 1, 1);
+    return {
+      current,
+      max: Math.max(Number(saved.max) || 0, 0),
+      phase: saved.phase === 'down' ? 'down' : 'up',
+      completedReps: Math.max(Number(saved.completedReps) || 0, 0),
+      stoppedReps: Math.max(Number(saved.stoppedReps) || 0, 0),
+      restReps: Math.max(Number(saved.restReps) || 0, 0),
+      finished: saved.finished === true
+    };
+  } catch (error) {
+    console.warn('Progresso dip non leggibile:', error);
+    return { current: 1, max: 0, phase: 'up', completedReps: 0, stoppedReps: 0, restReps: 0, finished: false };
+  }
+}
+
+function saveDipProgress(exercise, progress) {
+  try {
+    localStorage.setItem(getDipProgressKey(exercise), JSON.stringify(progress));
+  } catch (error) {
+    console.error('Impossibile salvare il progresso delle dip:', error);
+  }
+}
+
+function getDipRestSeconds(reps) {
+  if (reps <= 1) return 30;
+  if (reps === 2) return 60;
+  return 90;
+}
+
+function startDipRest(reps, overlay) {
+  startTimer(
+    getDipRestSeconds(reps),
+    `Recupero dopo ${reps} rep`,
+    overlay
+  );
+  if ('vibrate' in navigator) navigator.vibrate(12);
+}
+
+function setupDipIncrement(exercise, overlay) {
+  const state = loadDipProgress(exercise);
+  const widget = document.createElement('div');
+  widget.className = 'dip-increment-widget';
+  widget.dataset.completed = state.finished ? '1' : '0';
+  widget.dataset.total = '1';
+  widget.innerHTML = `
+    <div class="dip-counters" aria-live="polite">
+      <div class="dip-counter-card">
+        <span class="dip-counter-label">Reps da fare</span>
+        <strong class="dip-target-counter"></strong>
+      </div>
+      <div class="dip-counter-card">
+        <span class="dip-counter-label">Reps totali</span>
+        <strong class="dip-total-counter"></strong>
+      </div>
+    </div>
+    <div class="dip-current"></div>
+    <button class="dip-max-button" type="button">Questo è il massimo: inizia la discesa</button>
+    <div class="dip-actions">
+      <button class="dip-complete-button" type="button"></button>
+      <button class="dip-finish-button" type="button" hidden></button>
+    </div>
+    <p class="dip-status" aria-live="polite"></p>
+  `;
+
+  const targetCounter = widget.querySelector('.dip-target-counter');
+  const totalCounter = widget.querySelector('.dip-total-counter');
+  const current = widget.querySelector('.dip-current');
+  const maxButton = widget.querySelector('.dip-max-button');
+  const completeButton = widget.querySelector('.dip-complete-button');
+  const finishButton = widget.querySelector('.dip-finish-button');
+  const status = widget.querySelector('.dip-status');
+
+  const render = () => {
+    const finished = state.finished;
+    const target = finished ? 0 : state.current;
+    targetCounter.textContent = finished ? '0' : target;
+    totalCounter.textContent = state.completedReps;
+    current.textContent = finished
+      ? 'Piramide completata!'
+      : `${state.phase === 'up' ? 'Salita' : 'Discesa'}: obiettivo ${target} rep`;
+    completeButton.textContent = finished ? 'Piramide completata' : `Registra serie (${target} rep)`;
+    completeButton.disabled = finished;
+    maxButton.hidden = finished || state.phase === 'down';
+    maxButton.disabled = state.current < 1;
+    finishButton.hidden = !state.stoppedReps || finished;
+    finishButton.textContent = `Completa serie (restano ${target - state.stoppedReps} rep)`;
+    if (finished) {
+      exercise.classList.add('exercise-done');
+      widget.classList.add('completed');
+    } else {
+      exercise.classList.remove('exercise-done');
+      widget.classList.remove('completed');
+    }
+  };
+
+  completeButton.addEventListener('click', (event) => {
+    event.stopPropagation();
+    const target = state.current;
+    state.restReps = target;
+    state.completedReps += target;
+    state.stoppedReps = 0;
+    if (state.phase === 'up') {
+      state.current += 1;
+    } else if (state.current === 1) {
+      state.finished = true;
+    } else {
+      state.current -= 1;
+    }
+    saveDipProgress(exercise, state);
+    render();
+    updateScreenProgress(exercise.closest('.screen'));
+    if (!state.finished) startDipRest(target, overlay);
+  });
+
+  maxButton.addEventListener('click', (event) => {
+    event.stopPropagation();
+    state.max = state.current;
+    state.phase = 'down';
+    state.current = Math.max(state.max - 1, 1);
+    saveDipProgress(exercise, state);
+    render();
+  });
+
+  finishButton.addEventListener('click', (event) => {
+    event.stopPropagation();
+    const target = state.current;
+    state.restReps = target;
+    state.completedReps += state.stoppedReps;
+    state.stoppedReps = 0;
+    if (state.phase === 'up') {
+      state.current += 1;
+    } else if (state.current === 1) {
+      state.finished = true;
+    } else {
+      state.current -= 1;
+    }
+    saveDipProgress(exercise, state);
+    status.textContent = '';
+    render();
+    updateScreenProgress(exercise.closest('.screen'));
+    if (!state.finished) startDipRest(target, overlay);
+  });
+
+  exercise.appendChild(widget);
+  render();
+}
+
 function loadExerciseDetails(exercise) {
   const screen = exercise.closest('.screen');
   if (!screen) return { sets: [], notes: '', history: [] };
@@ -708,6 +874,29 @@ function createExerciseDetails(exercise, totalSets) {
   exercise.append(button, panel);
 }
 
+function setupExerciseAccordion(exercise) {
+  exercise.setAttribute('role', 'button');
+  exercise.setAttribute('tabindex', '0');
+  exercise.setAttribute('aria-expanded', 'false');
+  exercise.setAttribute('aria-label', `Apri specifiche: ${exercise.querySelector('.name')?.textContent.trim() || 'esercizio'}`);
+
+  const toggle = (event) => {
+    const interactive = event?.target.closest('button, input, select, textarea, a, [role="button"]');
+    if (interactive && interactive !== exercise) return;
+    const isOpen = exercise.classList.toggle('is-open');
+    exercise.setAttribute('aria-expanded', String(isOpen));
+    const detailsPanel = exercise.querySelector('.exercise-details');
+    if (detailsPanel) detailsPanel.hidden = !isOpen;
+  };
+
+  exercise.addEventListener('click', toggle);
+  exercise.addEventListener('keydown', event => {
+    if (event.key !== 'Enter' && event.key !== ' ') return;
+    event.preventDefault();
+    toggle();
+  });
+}
+
 function loadSetProgress(exercise) {
   const screen = exercise.closest('.screen');
   if (!screen) return 0;
@@ -732,10 +921,13 @@ function getSetCount(exercise) {
 
   const counts = [...badge.textContent.matchAll(/(\d+)(?:\s*-\s*(\d+))?\s*[xX]/g)]
     .map(match => Number(match[2] || match[1]));
-  return counts.length > 0 ? counts.reduce((total, count) => total + count, 0) : null;
+  if (counts.length > 0) return counts.reduce((total, count) => total + count, 0);
+
+  return /da compilare/i.test(badge.textContent) ? null : 1;
 }
 
 function setupSetProgress(exercise) {
+  if (isIncrementExercise(exercise)) return;
   const totalSets = getSetCount(exercise);
   if (totalSets === null) return;
 
@@ -812,7 +1004,7 @@ function completeSet(exercise) {
 
 // ─── 7. Progress Bar Globale & Reset Allenamento ─────────────────────
 function createProgressBar(screen) {
-  const exercises = screen.querySelectorAll('.exercise .set-progress');
+  const exercises = screen.querySelectorAll('.exercise .set-progress, .dip-increment-widget');
   if (exercises.length === 0) return;
 
   const bar = document.createElement('div');
@@ -835,7 +1027,7 @@ function updateScreenProgress(screen) {
   const bar = screen.querySelector('.workout-progress');
   if (!bar) return;
 
-  const allProgress = screen.querySelectorAll('.exercise .set-progress');
+  const allProgress = screen.querySelectorAll('.exercise .set-progress, .dip-increment-widget');
   let completedExercises = 0;
   allProgress.forEach(p => {
     if (Number(p.dataset.completed) >= Number(p.dataset.total)) {
@@ -858,8 +1050,8 @@ function updateScreenProgress(screen) {
   }
 }
 
-function createResetButton(screen) {
-  const exercises = screen.querySelectorAll('.exercise .set-progress');
+function createResetButton(screen, overlay) {
+  const exercises = screen.querySelectorAll('.exercise .set-progress, .dip-increment-widget');
   if (exercises.length === 0) return;
 
   const btn = document.createElement('button');
@@ -870,6 +1062,16 @@ function createResetButton(screen) {
     if (!confirm('Vuoi resettare tutti i contatori di questa scheda?')) return;
 
     screen.querySelectorAll('.exercise').forEach(exercise => {
+      if (isIncrementExercise(exercise)) {
+        localStorage.removeItem(getDipProgressKey(exercise));
+        exercise.classList.remove('exercise-done');
+        const widget = exercise.querySelector('.dip-increment-widget');
+        if (widget) {
+          widget.remove();
+          setupDipIncrement(exercise, overlay);
+        }
+        return;
+      }
       const progress = exercise.querySelector('.set-progress');
       if (!progress) return;
       const total = progress.dataset.total;
@@ -898,11 +1100,19 @@ function setupRestTimers() {
     const hasExercises = screen.querySelectorAll('.exercise').length > 0;
 
     screen.querySelectorAll('.exercise').forEach(exercise => {
+      if (isIncrementExercise(exercise)) {
+        setupDipIncrement(exercise, overlay);
+      }
       setupSetProgress(exercise);
-      const totalSets = getSetCount(exercise);
-      if (totalSets !== null) createExerciseDetails(exercise, totalSets);
       const meta = exercise.querySelector('.ex-meta');
-      if (!meta) return;
+      if (isIncrementExercise(exercise)) {
+        setupExerciseAccordion(exercise);
+        return;
+      }
+      if (!meta) {
+        setupExerciseAccordion(exercise);
+        return;
+      }
 
       const controls = document.createElement('div');
       controls.className = 'rest-controls';
@@ -915,7 +1125,7 @@ function setupRestTimers() {
           button.className = 'rest-button';
           button.textContent = `Avvia ${label} (${formatTime(time.seconds)})`;
           button.addEventListener('click', () => {
-            if (isSetRest) completeSet(exercise);
+            if (isSetRest && !isIncrementExercise(exercise)) completeSet(exercise);
             startTimer(time.seconds, label, overlay);
             if ('vibrate' in navigator) navigator.vibrate(12);
           });
@@ -923,11 +1133,12 @@ function setupRestTimers() {
         });
       });
       if (controls.children.length > 0) exercise.appendChild(controls);
+      setupExerciseAccordion(exercise);
     });
 
     if (hasExercises) {
       createProgressBar(screen);
-      createResetButton(screen);
+      createResetButton(screen, overlay);
       updateScreenProgress(screen);
     }
   });

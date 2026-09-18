@@ -199,6 +199,15 @@ body {
   box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2);
 }
 
+.app-title {
+  margin: 0 0 18px;
+  color: var(--accent);
+  font-size: clamp(28px, 8vw, 36px);
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  text-align: center;
+}
+
 .calendar-toolbar {
   display: flex;
   align-items: center;
@@ -333,6 +342,19 @@ button.calendar-day:hover {
 .day-dot.custom,
 .legend-dot.custom {
   background: var(--text-dim);
+}
+
+.calendar-session-label {
+  display: block;
+  max-width: 100%;
+  margin: 2px 2px 0;
+  overflow: hidden;
+  color: var(--text-dim);
+  font-size: 8px;
+  font-weight: 800;
+  line-height: 1.1;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .calendar-legend {
@@ -525,8 +547,9 @@ button.calendar-day:hover {
   inset: 0;
   align-items: flex-end;
   justify-content: center;
-  padding: 18px;
+  padding: 18px 18px 72px;
   background: rgba(0, 0, 0, 0.7);
+  -webkit-backdrop-filter: blur(4px);
   backdrop-filter: blur(4px);
 }
 
@@ -888,6 +911,25 @@ button.calendar-day:hover {
   position: relative;
 }
 
+.exercise:not(.is-open) .ex-note,
+.exercise:not(.is-open) .ex-meta,
+.exercise:not(.is-open) .rest-controls,
+.exercise:not(.is-open) .exercise-details {
+  display: none;
+}
+
+.exercise:not(.is-open) {
+  cursor: pointer;
+}
+
+.exercise.is-open {
+  cursor: default;
+}
+
+.exercise-details-toggle {
+  display: none;
+}
+
 .exercise:hover {
   background: var(--card-hover);
   border-color: var(--accent);
@@ -1073,8 +1115,8 @@ button.calendar-day:hover {
   line-height: 1.25;
   transition: all 0.3s ease;
   cursor: pointer;
-  user-select: none;
   -webkit-user-select: none;
+  user-select: none;
 }
 
 .set-progress:hover {
@@ -1090,6 +1132,130 @@ button.calendar-day:hover {
   background: rgba(76, 217, 100, 0.18);
   color: #4cd964;
   border-color: rgba(76, 217, 100, 0.5);
+}
+
+.dip-increment-widget {
+  --increment-color: var(--push-color);
+  --increment-glow: var(--push-glow);
+  margin-top: 14px;
+  padding: 13px;
+  border: 1px solid var(--card-border);
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.14);
+}
+
+.dip-counters {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.dip-counter-card {
+  padding: 9px;
+  border: 1px solid var(--card-border);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.05);
+  text-align: center;
+}
+
+.dip-counter-label {
+  display: block;
+  color: var(--text-dim);
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.dip-target-counter,
+.dip-total-counter {
+  display: block;
+  margin-top: 3px;
+  color: var(--increment-color);
+  font-size: 22px;
+  line-height: 1;
+}
+
+.dip-current {
+  font-weight: 800;
+}
+
+.dip-current {
+  margin-top: 4px;
+  color: var(--text-dim);
+  font-size: 12px;
+}
+
+.dip-max-button {
+  width: 100%;
+  margin-top: 12px;
+  padding: 9px 10px;
+  border: 1px solid var(--increment-color);
+  border-radius: 8px;
+  background: var(--increment-glow);
+  color: var(--text);
+  font: inherit;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.dip-max-button:hover {
+  filter: brightness(1.15);
+}
+
+.dip-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.dip-actions button {
+  flex: 1 1 150px;
+  min-height: 36px;
+  padding: 8px 10px;
+  border: 1px solid var(--push-color);
+  border-radius: 8px;
+  background: var(--push-glow);
+  color: var(--text);
+  font: inherit;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.dip-actions button:hover {
+  filter: brightness(1.15);
+}
+
+#tirata-1 .dip-increment-widget,
+#tirata-2 .dip-increment-widget,
+#tirata-3 .dip-increment-widget,
+#tirata-4 .dip-increment-widget {
+  --increment-color: var(--pull-color);
+  --increment-glow: var(--pull-glow);
+}
+
+.dip-actions button:disabled {
+  cursor: default;
+  opacity: 0.55;
+}
+
+.dip-finish-button {
+  border-color: var(--accent) !important;
+  background: var(--accent-glow) !important;
+  color: var(--text) !important;
+}
+
+.dip-increment-widget.completed {
+  border-color: rgba(76, 217, 100, 0.5);
+}
+
+.dip-status {
+  margin: 9px 0 0;
+  color: var(--text-dim);
+  font-size: 11px;
+  line-height: 1.4;
 }
 
 .exercise-details-toggle,
@@ -1242,6 +1408,7 @@ button.calendar-day:hover {
   border-radius: 24px;
   background: rgba(12, 14, 20, 0.96);
   box-shadow: 0 16px 42px rgba(0, 0, 0, 0.58), 0 0 60px rgba(217, 224, 76, 0.06);
+  -webkit-backdrop-filter: blur(18px);
   backdrop-filter: blur(18px);
   text-align: center;
 }

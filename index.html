@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
-  <meta name="apple-mobile-web-app-title" content="Schede">
-  <title>Schede allenamento</title>
+  <meta name="apple-mobile-web-app-title" content="CaliTracker">
+  <title>CaliTracker</title>
   <link rel="stylesheet" href="style.css">
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="icon-192.svg">
@@ -20,18 +20,8 @@
 </head>
 <body>
 
-<!-- HOME: CALENDARIO CENTRALE -->
 <div class="screen active" id="menu">
-  <div class="menu-header">
-    <div class="calisthenics-mark" aria-hidden="true">
-      <span class="bar"></span>
-      <span class="ring ring-left"></span>
-      <span class="ring ring-right"></span>
-    </div>
-    <h1>Calendario allenamenti</h1>
-    <p>Registra e ritrova le tue sessioni</p>
-  </div>
-  <div class="week-summary" id="weekSummary" aria-live="polite"></div>
+  <h1 class="app-title">Tracker allenamenti</h1>
   <section class="calendar-card" aria-label="Calendario mensile">
     <div class="calendar-toolbar">
       <button class="calendar-nav-btn" id="previousMonth" type="button" aria-label="Mese precedente">‹</button>
@@ -48,60 +38,6 @@
       <span><i class="legend-dot custom"></i> Ad hoc</span>
     </div>
   </section>
-  <section class="stats-dashboard" aria-labelledby="statsTitle">
-    <div class="stats-heading">
-      <div>
-        <h2 id="statsTitle">I tuoi progressi</h2>
-        <p>Una panoramica della costanza e delle serie completate.</p>
-      </div>
-      <div class="goal-control">
-        <label for="weeklyGoal">Obiettivo</label>
-        <select id="weeklyGoal" aria-label="Sessioni obiettivo settimanale">
-          <option value="2">2 sessioni</option>
-          <option value="3">3 sessioni</option>
-          <option value="4" selected>4 sessioni</option>
-          <option value="5">5 sessioni</option>
-          <option value="6">6 sessioni</option>
-          <option value="7">7 sessioni</option>
-        </select>
-      </div>
-    </div>
-    <div class="stats-cards" id="statsCards"></div>
-    <div class="chart-card">
-      <div class="chart-title-row">
-        <h3>Sessioni recenti</h3>
-        <span id="streakValue"></span>
-      </div>
-      <div class="stats-chart" id="weeklyChart" aria-label="Sessioni degli ultimi sette giorni"></div>
-      <div class="chart-axis"><span>7 giorni fa</span><span>Oggi</span></div>
-    </div>
-    <div class="chart-card">
-      <div class="chart-title-row">
-        <h3>Andamento mensile</h3>
-        <span id="monthlyTotal"></span>
-      </div>
-      <div class="stats-chart monthly-chart" id="monthlyChart" aria-label="Sessioni per settimana del mese"></div>
-      <div class="chart-axis"><span>Inizio mese</span><span>Fine mese</span></div>
-    </div>
-    <div class="records-card">
-      <div class="chart-title-row">
-        <h3>Record serie</h3>
-        <span class="stats-caption">massimo salvato</span>
-      </div>
-      <div id="recordsList" class="records-list"></div>
-    </div>
-  </section>
-  <button class="calendar-history-btn" type="button" onclick="showScreen('sub-programma')">Apri le schede del programma <span>›</span></button>
-  <div class="appearance-controls" aria-label="Aspetto">
-    <button type="button" id="themeToggle" aria-pressed="false">Tema chiaro</button>
-    <button type="button" id="fontDecrease" aria-label="Riduci dimensione testo">A−</button>
-    <button type="button" id="fontIncrease" aria-label="Aumenta dimensione testo">A+</button>
-  </div>
-  <div class="data-actions" aria-label="Gestione dati">
-    <button type="button" id="exportDataButton">Esporta dati</button>
-    <button type="button" id="importDataButton">Importa dati</button>
-    <input type="file" id="importDataInput" accept="application/json" hidden>
-  </div>
 </div>
 
 <div class="day-modal" id="dayModal" aria-hidden="true">
@@ -235,7 +171,7 @@
       </div>
       <div class="ex-meta"><span>Riposo serie: <b>2' 30&quot;</b></span><span>// <b>3' 30&quot;</b></span></div>
     </div>
-    <div class="exercise">
+    <div class="exercise" data-exercise-id="dip-incremento" data-dip-increment="1">
       <div class="ex-head">
         <div class="ex-num">3</div>
         <div class="ex-title-wrap">
@@ -349,7 +285,7 @@
   </div>
   <div class="ex-note programming-note"><b>Note programmazione:</b> da seguire in questo modo 3 settimane di volume poi 2 settimane di intensità.</div>
   <div class="exercise-list">
-    <div class="exercise">
+    <div class="exercise" data-exercise-id="trazioni-ladder" data-increment-ladder="1">
       <div class="ex-head">
         <div class="ex-num">1</div>
         <div class="ex-title-wrap">
@@ -370,16 +306,6 @@
       </div>
       <div class="ex-note"><b>Note:</b> 1&quot; fermo a metà e in alto.</div>
       <div class="ex-meta"><span>Riposo serie: <b>90&quot;</b></span><span>// <b>2' 30&quot;</b></span></div>
-    </div>
-    <div class="exercise">
-      <div class="ex-head">
-        <div class="ex-num">3</div>
-        <div class="ex-title-wrap">
-          <div class="name">Piegamenti a terra rialzo sotto il petto da 4 cm</div>
-          <span class="badge">4 X (12-16-20-16-12)</span>
-        </div>
-      </div>
-      <div class="ex-meta"><span>Tra le serie: <b>20&quot;</b></span><span>// <b>120&quot;</b></span></div>
     </div>
     <div class="exercise">
       <div class="ex-head">

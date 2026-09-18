@@ -1,7 +1,7 @@
 {
-  "name": "Le mie schede",
-  "short_name": "Schede",
-  "description": "Le mie schede di allenamento calisthenics",
+  "name": "CaliTracker",
+  "short_name": "CaliTracker",
+  "description": "Calendario per gli allenamenti di calisthenics",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
