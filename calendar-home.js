@@ -16,6 +16,7 @@
   let displayedMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
   let sessions = loadSessions();
   let lastModalTrigger = null;
+  let pendingSelectionDate = null;
 
   function dateKey(date) {
     return [
@@ -289,43 +290,66 @@
     content.replaceChildren();
 
     if (session) {
-      const card = document.createElement('div');
-      card.className = `day-session-card ${session.type}`;
-      const sessionTitle = document.createElement('strong');
-      sessionTitle.textContent = session.title;
-      const sessionSource = document.createElement('span');
-      sessionSource.textContent = session.source === 'custom' ? 'Sessione ad hoc' : 'Scheda del programma';
-      card.append(sessionTitle, sessionSource);
-      content.appendChild(card);
-      const openButton = createAction('Apri allenamento', 'primary');
-      openButton.addEventListener('click', () => {
-        closeDay();
-        if (session.workoutId && typeof window.showScreen === 'function') window.showScreen(session.workoutId);
-      });
-      content.appendChild(openButton);
-      const replaceButton = createAction('Sostituisci sessione', '');
-      replaceButton.addEventListener('click', () => renderChoices(date, content));
-      content.appendChild(replaceButton);
-      const deleteButton = createAction('Elimina sessione', 'danger');
-      deleteButton.addEventListener('click', () => {
-        if (!window.confirm('Vuoi eliminare questa sessione dal calendario?')) return;
-        delete sessions[dateKey(date)];
-        try {
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(sessions));
-        } catch (error) {
-          console.error('Impossibile eliminare la sessione:', error);
-          return;
-        }
-        closeDay();
-        renderCalendar();
-      });
-      content.appendChild(deleteButton);
+      renderSavedSessionActions(date, session, content);
     } else {
       renderChoices(date, content);
+      return;
     }
     modal.classList.add('active');
     modal.setAttribute('aria-hidden', 'false');
     document.getElementById('closeDayModal')?.focus();
+  }
+
+  function renderSavedSessionActions(date, session, content) {
+    const card = document.createElement('div');
+    card.className = `day-session-card ${session.type}`;
+    const sessionTitle = document.createElement('strong');
+    sessionTitle.textContent = session.title;
+    const sessionSource = document.createElement('span');
+    sessionSource.textContent = session.source === 'custom' ? 'Sessione ad hoc' : 'Scheda salvata';
+    card.append(sessionTitle, sessionSource);
+    content.appendChild(card);
+
+    const intro = document.createElement('p');
+    intro.className = 'day-modal-intro';
+    intro.textContent = 'Cosa vuoi fare con questa sessione?';
+    content.appendChild(intro);
+
+    const actions = document.createElement('div');
+    actions.className = 'saved-session-actions';
+
+    const watchButton = createAction('Guarda sessione', 'session-watch');
+    watchButton.addEventListener('click', () => {
+      closeDay();
+      if (session.workoutId && typeof window.showScreen === 'function') {
+        window.showScreen(session.workoutId);
+      }
+    });
+    actions.appendChild(watchButton);
+
+    const changeButton = createAction('Cambia sessione', 'session-change');
+    changeButton.addEventListener('click', () => {
+      pendingSelectionDate = date;
+      closeDay();
+      if (typeof window.showScreen === 'function') window.showScreen('sub-programma');
+    });
+    actions.appendChild(changeButton);
+
+    const deleteButton = createAction('Elimina sessione', 'session-delete');
+    deleteButton.addEventListener('click', () => {
+      if (!window.confirm('Vuoi eliminare questa sessione dal calendario?')) return;
+      delete sessions[dateKey(date)];
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(sessions));
+      } catch (error) {
+        console.error('Impossibile eliminare la sessione:', error);
+        return;
+      }
+      closeDay();
+      renderCalendar();
+    });
+    actions.appendChild(deleteButton);
+    content.appendChild(actions);
   }
 
   function createAction(label, variant) {
@@ -337,21 +361,24 @@
   }
 
   function renderChoices(date, content) {
-    content.replaceChildren();
-    const intro = document.createElement('p');
-    intro.className = 'day-modal-intro';
-    intro.textContent = 'Che tipo di allenamento vuoi fare?';
-    content.appendChild(intro);
-
-    [
-      { type: 'push', label: 'Spinta', className: 'push' },
-      { type: 'pull', label: 'Tirata', className: 'pull' }
-    ].forEach(category => {
-      const button = createAction(category.label, category.className);
-      button.addEventListener('click', () => renderWorkoutChoices(date, content, category.type));
-      content.appendChild(button);
-    });
+    pendingSelectionDate = date;
+    closeDay();
+    if (typeof window.showScreen === 'function') window.showScreen('sub-programma');
   }
+
+  window.openWorkoutFromCalendar = function (workoutId) {
+    if (pendingSelectionDate) {
+      const workout = WORKOUTS[workoutId];
+      if (workout && !saveSession(pendingSelectionDate, {
+        type: workout.type,
+        title: workout.label,
+        workoutId,
+        source: 'program'
+      })) return false;
+      pendingSelectionDate = null;
+    }
+    return true;
+  };
 
   function renderWorkoutChoices(date, content, type) {
     content.replaceChildren();
