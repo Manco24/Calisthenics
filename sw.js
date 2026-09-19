@@ -1,4 +1,4 @@
-const CACHE_NAME = 'schede-v8';
+const CACHE_NAME = 'schede-v9';
 const APP_FILES = [
   './',
   './index.html',
@@ -50,7 +50,7 @@ self.addEventListener('fetch', event => {
   }
 
   event.respondWith(
-    caches.match(event.request).then(cached => {
+    caches.match(event.request, { ignoreSearch: true }).then(cached => {
       if (cached) return cached;
       return fetch(event.request).then(response => {
         if (response.ok) {

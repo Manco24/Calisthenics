@@ -875,26 +875,18 @@ function createExerciseDetails(exercise, totalSets) {
 }
 
 function setupExerciseAccordion(exercise) {
-  exercise.setAttribute('role', 'button');
-  exercise.setAttribute('tabindex', '0');
-  exercise.setAttribute('aria-expanded', 'false');
-  exercise.setAttribute('aria-label', `Apri specifiche: ${exercise.querySelector('.name')?.textContent.trim() || 'esercizio'}`);
+  exercise.setAttribute('role', 'group');
+  exercise.setAttribute('aria-label', exercise.querySelector('.name')?.textContent.trim() || 'esercizio');
 
   const toggle = (event) => {
     const interactive = event?.target.closest('button, input, select, textarea, a, [role="button"]');
     if (interactive && interactive !== exercise) return;
     const isOpen = exercise.classList.toggle('is-open');
-    exercise.setAttribute('aria-expanded', String(isOpen));
     const detailsPanel = exercise.querySelector('.exercise-details');
     if (detailsPanel) detailsPanel.hidden = !isOpen;
   };
 
   exercise.addEventListener('click', toggle);
-  exercise.addEventListener('keydown', event => {
-    if (event.key !== 'Enter' && event.key !== ' ') return;
-    event.preventDefault();
-    toggle();
-  });
 }
 
 function loadSetProgress(exercise) {
@@ -1104,6 +1096,10 @@ function setupRestTimers() {
         setupDipIncrement(exercise, overlay);
       }
       setupSetProgress(exercise);
+      const totalSets = getSetCount(exercise);
+      if (!isIncrementExercise(exercise) && totalSets !== null) {
+        createExerciseDetails(exercise, totalSets);
+      }
       const meta = exercise.querySelector('.ex-meta');
       if (isIncrementExercise(exercise)) {
         setupExerciseAccordion(exercise);
