@@ -1,6 +1,6 @@
 # Report di debug CaliTracker
 
-**Data verifica:** 19 settembre 2026  
+**Data verifica:** 1 ottobre 2026  
 **Ambienti verificati:** browser Chromium, viewport mobile 320x700, viewport mobile 375x812 e viewport desktop simulato 575x789.  
 **Nota:** il progetto è una PWA statica senza `package.json` o suite automatizzata. I test interattivi sono stati eseguiti caricando `index.html`; il service worker richiede invece HTTP/HTTPS e non è validabile correttamente con `file://`.
 
@@ -14,8 +14,8 @@
 | Navigazione schede | OK | Menu, Spinta/Tirata e apertura delle schede funzionano. |
 | URL/history e back | OK | La scheda aperta aggiorna l'hash, utile anche al tasto indietro del telefono/browser. |
 | Contatore serie | OK | Il completamento aggiorna il contatore e resta dopo il reload tramite `localStorage`. |
-| Dettagli esercizio | RISOLTO | La funzione esisteva ma non veniva mai invocata; ora il pannello è disponibile e i dati persistono. |
-| Timer recupero | OK | Overlay, countdown, pausa/salta e completamento automatico della serie verificati. |
+| UI dettagli esercizio | RIMOSSA | Su richiesta sono stati rimossi il pulsante e l'intero pannello Peso/Rip./Difficoltà/Note. |
+| Timer recupero | OK | Overlay, countdown e timer della discesa Dip verificati: dopo un massimo di 4 reps parte 1:20 e il target scende a 3. |
 | Responsive mobile | OK | A 320px non è stato rilevato overflow orizzontale. |
 | Responsive desktop | PARZIALE | La larghezza massima è correttamente limitata a circa 560px; manca un test su un dispositivo desktop reale. |
 | Service worker/offline | OK | Verificato via HTTP locale: service worker attivo, reload offline riuscito e CSS con query string servito dalla cache. |
@@ -43,23 +43,22 @@
 - Dopo il reload, il contatore viene ricostruito dal `localStorage`.
 - Il reset della scheda è presente nell'interfaccia; non sono emersi errori nella sua costruzione.
 
-### Dettagli esercizio
+### UI dettagli esercizio
 
-È stato rilevato e corretto un difetto funzionale:
+Su richiesta sono stati rimossi dall'interfaccia e dal codice che li generava:
 
-- `createExerciseDetails()` costruiva correttamente il pannello Peso/Rip./Difficoltà/Note.
-- Nessun punto del codice chiamava però la funzione, quindi l'utente non poteva aprire o salvare i dettagli.
-- La funzione viene ora invocata per gli esercizi con numero di serie valido.
-- Verifica dopo la correzione:
-  - 5 pulsanti `Dettagli` visibili nella scheda `Spinta 1`.
-  - Salvataggio di peso, ripetizioni e note in `calisthenics_details_spinta-1-1`.
-  - Valore del peso ripristinato dopo il reload.
+- il pulsante `Dettagli`;
+- il pannello con Peso, Ripetizioni, Difficoltà e Note;
+- gli stili CSS associati.
+
+I dati preesistenti `calisthenics_details_*` non vengono cancellati dal dispositivo, ma non sono più mostrati nell'interfaccia. L'esportazione/importazione backup continua a conservarli per compatibilità.
 
 ### Timer
 
 - Il pulsante “Avvia Riposo serie (2:30)” crea l'overlay del timer.
 - Countdown, label e pulsanti `+30s`, `Pausa` e `Salta` sono presenti.
 - Il timer avvia anche il completamento automatico della serie associata, come previsto dal codice.
+- Piramide Dip verificata: dopo le serie ascendenti da 1 a 4, dichiarare 4 come massimo avvia 1:20 di recupero e imposta la prima serie discendente a 3 reps; il successivo recupero dopo 3 reps è 1:00.
 - Non è stato possibile certificare il comportamento con app in background, audio bloccato o telefono bloccato.
 
 ### Layout mobile
@@ -110,12 +109,15 @@ Gli esercizi usavano un contenitore con `role="button"` che conteneva altri puls
 
 Modifiche applicate:
 
-- In `script.js`, durante l'inizializzazione degli esercizi, viene calcolato il numero totale di serie e viene chiamata `createExerciseDetails()` per gli esercizi compatibili.
+- Rimossa la UI dei dettagli degli esercizi su richiesta, mantenendo il contatore serie, l'espansione delle note originali e i timer.
 - In `script.js`, i contenitori degli esercizi non sono più annunciati come pulsanti contenenti altri pulsanti.
-- In `sw.js`, la cache è passata a `schede-v9` e le richieste statiche ignorano la query string durante la ricerca.
-- In `index.html`, il riferimento al CSS è passato a `style.css?v=3`.
-- Gli esercizi incrementali delle dip restano gestiti dal loro widget dedicato.
+- In `sw.js`, la cache è passata a `schede-v11` e le richieste statiche ignorano la query string durante la ricerca.
+- In `index.html`, il riferimento al CSS è passato a `style.css?v=4`.
+- Nella piramide Dip il pulsante di discesa registra come massimo l'ultima serie completata (`target - 1`), avvia il recupero previsto dal programma e prepara il target a `massimo - 1`.
+- I recuperi della piramide Dip seguono la scheda: 20s dopo 1 rep, 40s dopo 2, 60s dopo 3 e 80s dopo 4 o più. Il timer della ladder trazioni non è stato modificato.
+- Il progresso Dip salvato prima della correzione viene migrato al nuovo formato e riallineato se la piramide era già in discesa.
+- Gli esercizi incrementali restano gestiti dal loro widget dedicato.
 
 ## Conclusione
 
-Il funzionamento principale su browser desktop e viewport mobile è operativo. Sono stati corretti e verificati i dettagli degli esercizi, la cache offline con query string e la struttura ARIA annidata. Restano da provare su dispositivi fisici le notifiche/audio in background e la compatibilità specifica di Android/Chrome e iOS/Safari.
+Il funzionamento principale su browser desktop e viewport mobile è operativo. La UI dei dettagli è stata rimossa su richiesta; restano il contatore delle serie, i timer e le note descrittive degli esercizi. La discesa della piramide Dip ora avvia il riposo dopo il massimo e inizia da massimo meno una ripetizione. La cache offline con query string e la struttura ARIA annidata sono state corrette. Restano da provare su dispositivi fisici le notifiche/audio in background e la compatibilità specifica di Android/Chrome e iOS/Safari.

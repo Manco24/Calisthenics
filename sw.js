@@ -1,4 +1,4 @@
-const CACHE_NAME = 'schede-v9';
+const CACHE_NAME = 'schede-v11';
 const APP_FILES = [
   './',
   './index.html',

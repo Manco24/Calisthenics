@@ -1167,8 +1167,7 @@ button.calendar-day:hover {
 
 .exercise:not(.is-open) .ex-note,
 .exercise:not(.is-open) .ex-meta,
-.exercise:not(.is-open) .rest-controls,
-.exercise:not(.is-open) .exercise-details {
+.exercise:not(.is-open) .rest-controls {
   display: none;
 }
 
@@ -1178,10 +1177,6 @@ button.calendar-day:hover {
 
 .exercise.is-open {
   cursor: default;
-}
-
-.exercise-details-toggle {
-  display: none;
 }
 
 .exercise:hover {
@@ -1510,91 +1505,6 @@ button.calendar-day:hover {
   color: var(--text-dim);
   font-size: 11px;
   line-height: 1.4;
-}
-
-.exercise-details-toggle,
-.exercise-details-save {
-  margin-top: 12px;
-  padding: 8px 11px;
-  border: 1px solid var(--card-border);
-  border-radius: 9px;
-  background: rgba(255, 255, 255, 0.05);
-  color: var(--text-dim);
-  font: inherit;
-  font-size: 11px;
-  font-weight: 700;
-  cursor: pointer;
-}
-
-.exercise-details-toggle:hover,
-.exercise-details-save:hover {
-  border-color: var(--accent);
-  color: var(--accent);
-}
-
-.exercise-details {
-  margin-top: 12px;
-  padding: 12px;
-  border: 1px solid var(--card-border);
-  border-radius: 12px;
-  background: rgba(0, 0, 0, 0.14);
-}
-
-.exercise-details h3 {
-  margin: 0 0 8px;
-  font-size: 13px;
-}
-
-.exercise-history {
-  margin: 0 0 10px;
-  color: var(--text-dim);
-  font-size: 11px;
-}
-
-.set-details-list {
-  display: grid;
-  gap: 8px;
-}
-
-.set-details-row {
-  display: grid;
-  grid-template-columns: auto repeat(3, 1fr);
-  align-items: end;
-  gap: 6px;
-}
-
-.set-details-row strong,
-.set-details-row label,
-.exercise-notes-label {
-  color: var(--text-dim);
-  font-size: 10px;
-}
-
-.set-details-row input,
-.set-details-row select,
-.exercise-notes-label textarea {
-  width: 100%;
-  margin-top: 4px;
-  padding: 7px;
-  border: 1px solid var(--card-border);
-  border-radius: 7px;
-  background: rgba(0, 0, 0, 0.2);
-  color: var(--text);
-  font: inherit;
-  font-size: 11px;
-}
-
-.exercise-notes-label {
-  display: block;
-  margin-top: 10px;
-}
-
-.exercise-notes-label textarea {
-  resize: vertical;
-}
-
-.exercise-details-save {
-  color: var(--accent);
 }
 
 .day-action.danger {

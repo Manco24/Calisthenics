@@ -547,8 +547,6 @@ function stopTimer() {
 
 
 // ─── 6. Contatore Serie con Persistenza localStorage ──────────────────
-const DETAILS_PREFIX = 'calisthenics_details_';
-
 function getExerciseId(exercise, screenId) {
   const explicitId = exercise.dataset.exerciseId;
   if (explicitId) return explicitId;
@@ -566,10 +564,6 @@ function getStorageKey(exercise, screenId) {
   return `calisthenics_sets_${getExerciseId(exercise, screenId)}`;
 }
 
-function getDetailsStorageKey(exercise, screenId) {
-  return `${DETAILS_PREFIX}${getExerciseId(exercise, screenId)}`;
-}
-
 function saveSetProgress(exercise, completed) {
   const screen = exercise.closest('.screen');
   if (!screen) return;
@@ -581,7 +575,8 @@ function saveSetProgress(exercise, completed) {
   }
 }
 
-const DIP_PROGRESS_SUFFIX = '_dip_progress';
+const DIP_PROGRESS_SUFFIX = '_dip_progress_v2';
+const LEGACY_DIP_PROGRESS_SUFFIX = '_dip_progress';
 
 function getDipProgressKey(exercise) {
   const screen = exercise.closest('.screen');
@@ -594,17 +589,38 @@ function isIncrementExercise(exercise) {
 
 function loadDipProgress(exercise) {
   try {
-    const saved = JSON.parse(localStorage.getItem(getDipProgressKey(exercise)) || '{}');
-    const current = Math.max(Number(saved.current) || 1, 1);
-    return {
+    const screen = exercise.closest('.screen');
+    const storageKey = getDipProgressKey(exercise);
+    const legacyKey = screen
+      ? `${getStorageKey(exercise, screen.id)}${LEGACY_DIP_PROGRESS_SUFFIX}`
+      : '';
+    const savedValue = localStorage.getItem(storageKey) ?? localStorage.getItem(legacyKey) ?? '{}';
+    const saved = JSON.parse(savedValue);
+    let current = Math.max(Number(saved.current) || 1, 1);
+    let max = Math.max(Number(saved.max) || 0, 0);
+    let finished = saved.finished === true;
+    const phase = saved.phase === 'down' ? 'down' : 'up';
+
+    if (exercise.dataset.dipIncrement && phase === 'down' && !localStorage.getItem(storageKey)) {
+      max = Math.max(max - 1, 1);
+      current = Math.max(current - 1, 1);
+      finished = finished || max === 1;
+    }
+
+    const progress = {
       current,
-      max: Math.max(Number(saved.max) || 0, 0),
-      phase: saved.phase === 'down' ? 'down' : 'up',
+      max,
+      phase,
       completedReps: Math.max(Number(saved.completedReps) || 0, 0),
       stoppedReps: Math.max(Number(saved.stoppedReps) || 0, 0),
       restReps: Math.max(Number(saved.restReps) || 0, 0),
-      finished: saved.finished === true
+      finished
     };
+
+    if (localStorage.getItem(storageKey) === null && savedValue !== '{}') {
+      localStorage.setItem(storageKey, JSON.stringify(progress));
+    }
+    return progress;
   } catch (error) {
     console.warn('Progresso dip non leggibile:', error);
     return { current: 1, max: 0, phase: 'up', completedReps: 0, stoppedReps: 0, restReps: 0, finished: false };
@@ -619,15 +635,21 @@ function saveDipProgress(exercise, progress) {
   }
 }
 
-function getDipRestSeconds(reps) {
+function getDipRestSeconds(reps, exercise) {
+  if (exercise.dataset.dipIncrement) {
+    if (reps <= 1) return 20;
+    if (reps === 2) return 40;
+    if (reps === 3) return 60;
+    return 80;
+  }
   if (reps <= 1) return 30;
   if (reps === 2) return 60;
   return 90;
 }
 
-function startDipRest(reps, overlay) {
+function startDipRest(reps, overlay, exercise) {
   startTimer(
-    getDipRestSeconds(reps),
+    getDipRestSeconds(reps, exercise),
     `Recupero dopo ${reps} rep`,
     overlay
   );
@@ -671,6 +693,7 @@ function setupDipIncrement(exercise, overlay) {
   const render = () => {
     const finished = state.finished;
     const target = finished ? 0 : state.current;
+    widget.dataset.completed = finished ? '1' : '0';
     targetCounter.textContent = finished ? '0' : target;
     totalCounter.textContent = state.completedReps;
     current.textContent = finished
@@ -707,16 +730,20 @@ function setupDipIncrement(exercise, overlay) {
     saveDipProgress(exercise, state);
     render();
     updateScreenProgress(exercise.closest('.screen'));
-    if (!state.finished) startDipRest(target, overlay);
+    if (!state.finished) startDipRest(target, overlay, exercise);
   });
 
   maxButton.addEventListener('click', (event) => {
     event.stopPropagation();
-    state.max = state.current;
+    const isDipPyramid = Boolean(exercise.dataset.dipIncrement);
+    state.max = isDipPyramid ? Math.max(state.current - 1, 1) : state.current;
     state.phase = 'down';
-    state.current = Math.max(state.max - 1, 1);
+    state.current = isDipPyramid ? state.max - 1 : Math.max(state.max - 1, 1);
+    state.finished = isDipPyramid && state.current === 0;
     saveDipProgress(exercise, state);
     render();
+    updateScreenProgress(exercise.closest('.screen'));
+    if (isDipPyramid && !state.finished) startDipRest(state.max, overlay, exercise);
   });
 
   finishButton.addEventListener('click', (event) => {
@@ -736,142 +763,11 @@ function setupDipIncrement(exercise, overlay) {
     status.textContent = '';
     render();
     updateScreenProgress(exercise.closest('.screen'));
-    if (!state.finished) startDipRest(target, overlay);
+    if (!state.finished) startDipRest(target, overlay, exercise);
   });
 
   exercise.appendChild(widget);
   render();
-}
-
-function loadExerciseDetails(exercise) {
-  const screen = exercise.closest('.screen');
-  if (!screen) return { sets: [], notes: '', history: [] };
-  try {
-    const currentKey = getDetailsStorageKey(exercise, screen.id);
-    const legacyKey = getLegacyStorageKey(exercise, screen.id, DETAILS_PREFIX);
-    const savedValue = localStorage.getItem(currentKey) ?? localStorage.getItem(legacyKey) ?? '{}';
-    const saved = JSON.parse(savedValue);
-    if (!localStorage.getItem(currentKey) && savedValue !== '{}') {
-      localStorage.setItem(currentKey, savedValue);
-    }
-    return {
-      sets: Array.isArray(saved.sets) ? saved.sets : [],
-      notes: typeof saved.notes === 'string' ? saved.notes : '',
-      history: Array.isArray(saved.history) ? saved.history : []
-    };
-  } catch (error) {
-    console.warn('Dettagli esercizio non leggibili:', error);
-    return { sets: [], notes: '', history: [] };
-  }
-}
-
-function saveExerciseDetails(exercise, details) {
-  const screen = exercise.closest('.screen');
-  if (!screen) return;
-  try {
-    const previous = loadExerciseDetails(exercise);
-    const history = [...previous.history, { savedAt: new Date().toISOString(), ...details }].slice(-20);
-    localStorage.setItem(getDetailsStorageKey(exercise, screen.id), JSON.stringify({ ...details, history }));
-  } catch (error) {
-    console.error('Impossibile salvare i dettagli esercizio:', error);
-  }
-}
-
-function createExerciseDetails(exercise, totalSets) {
-  const details = loadExerciseDetails(exercise);
-  const button = document.createElement('button');
-  button.type = 'button';
-  button.className = 'exercise-details-toggle';
-  button.textContent = 'Dettagli';
-  button.setAttribute('aria-expanded', 'false');
-
-  const panel = document.createElement('div');
-  panel.className = 'exercise-details';
-  panel.hidden = true;
-  const heading = document.createElement('h3');
-  heading.textContent = 'Progressi della sessione';
-  panel.appendChild(heading);
-  if (details.history.length > 0) {
-    const historyLabel = document.createElement('p');
-    historyLabel.className = 'exercise-history';
-    historyLabel.textContent = `${details.history.length} rilevazioni salvate`;
-    panel.appendChild(historyLabel);
-  }
-
-  const rows = document.createElement('div');
-  rows.className = 'set-details-list';
-  for (let index = 0; index < totalSets; index += 1) {
-    const saved = details.sets[index] || {};
-    const row = document.createElement('div');
-    row.className = 'set-details-row';
-    const series = document.createElement('strong');
-    series.textContent = `Serie ${index + 1}`;
-    row.appendChild(series);
-    const addInput = (labelText, field, value, placeholder, step, inputMode) => {
-      const label = document.createElement('label');
-      label.textContent = labelText;
-      const input = document.createElement('input');
-      input.type = 'number';
-      input.min = '0';
-      input.step = step;
-      input.inputMode = inputMode;
-      input.dataset.field = field;
-      input.value = typeof value === 'string' ? value : '';
-      input.placeholder = placeholder;
-      label.appendChild(input);
-      row.appendChild(label);
-    };
-    addInput('Peso', 'weight', saved.weight, 'kg', '0.5', 'decimal');
-    addInput('Rip.', 'reps', saved.reps, 'n', '1', 'numeric');
-    const difficultyLabel = document.createElement('label');
-    difficultyLabel.textContent = 'Difficoltà';
-    const difficulty = document.createElement('select');
-    difficulty.dataset.field = 'difficulty';
-    ['', 'facile', 'giusta', 'difficile'].forEach(value => {
-      const option = document.createElement('option');
-      option.value = value;
-      option.textContent = value || '-';
-      option.selected = saved.difficulty === value;
-      difficulty.appendChild(option);
-    });
-    difficultyLabel.appendChild(difficulty);
-    row.appendChild(difficultyLabel);
-    rows.appendChild(row);
-  }
-  panel.appendChild(rows);
-
-  const notesLabel = document.createElement('label');
-  notesLabel.className = 'exercise-notes-label';
-  notesLabel.textContent = 'Note personali';
-  const notes = document.createElement('textarea');
-  notes.rows = 3;
-  notes.maxLength = 500;
-  notes.placeholder = 'Come è andata?';
-  notes.value = details.notes;
-  notesLabel.appendChild(notes);
-  panel.appendChild(notesLabel);
-
-  const saveButton = document.createElement('button');
-  saveButton.type = 'button';
-  saveButton.className = 'exercise-details-save';
-  saveButton.textContent = 'Salva dettagli';
-  saveButton.addEventListener('click', () => {
-    const sets = [...rows.querySelectorAll('.set-details-row')].map(row => {
-      const value = field => row.querySelector(`[data-field="${field}"]`).value.trim();
-      return { weight: value('weight'), reps: value('reps'), difficulty: value('difficulty') };
-    });
-    saveExerciseDetails(exercise, { sets, notes: notes.value.trim() });
-    button.textContent = 'Salvato';
-    window.setTimeout(() => { button.textContent = 'Dettagli'; }, 1200);
-  });
-  panel.appendChild(saveButton);
-
-  button.addEventListener('click', () => {
-    const isOpen = !panel.hidden;
-    panel.hidden = isOpen;
-    button.setAttribute('aria-expanded', String(!isOpen));
-  });
-  exercise.append(button, panel);
 }
 
 function setupExerciseAccordion(exercise) {
@@ -881,9 +777,7 @@ function setupExerciseAccordion(exercise) {
   const toggle = (event) => {
     const interactive = event?.target.closest('button, input, select, textarea, a, [role="button"]');
     if (interactive && interactive !== exercise) return;
-    const isOpen = exercise.classList.toggle('is-open');
-    const detailsPanel = exercise.querySelector('.exercise-details');
-    if (detailsPanel) detailsPanel.hidden = !isOpen;
+    exercise.classList.toggle('is-open');
   };
 
   exercise.addEventListener('click', toggle);
@@ -1096,10 +990,6 @@ function setupRestTimers() {
         setupDipIncrement(exercise, overlay);
       }
       setupSetProgress(exercise);
-      const totalSets = getSetCount(exercise);
-      if (!isIncrementExercise(exercise) && totalSets !== null) {
-        createExerciseDetails(exercise, totalSets);
-      }
       const meta = exercise.querySelector('.ex-meta');
       if (isIncrementExercise(exercise)) {
         setupExerciseAccordion(exercise);
