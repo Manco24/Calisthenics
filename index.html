@@ -38,6 +38,25 @@
       <span><i class="legend-dot custom"></i> Ad hoc</span>
     </div>
   </section>
+  <section class="workout-type-selector home-app-selector" aria-label="Scegli applicativo">
+    <p class="selector-intro">Scegli cosa vuoi fare</p>
+    <div class="workout-type-buttons">
+      <button class="workout-type-btn route-push" type="button" onclick="showScreen('sub-programma')">
+        <span class="type-icon icon-push">A</span>
+        <span class="type-label">Allenamenti</span>
+        <span class="type-description">Apri le schede e registra i progressi</span>
+      </button>
+      <button class="workout-type-btn route-pull" type="button" onclick="showScreen('workout-editor')">
+        <span class="type-icon icon-pull">+</span>
+        <span class="type-label">Editor schede</span>
+        <span class="type-description">Crea, importa e modifica schede</span>
+      </button>
+    </div>
+  </section>
+</div>
+
+<div class="screen integrated-editor-screen" id="workout-editor">
+  <iframe src="./workout-editor/index.html" title="Editor delle schede di allenamento"></iframe>
 </div>
 
 <div class="day-modal" id="dayModal" aria-hidden="true">

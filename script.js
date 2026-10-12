@@ -4,6 +4,7 @@
 
 // ─── 1. Navigazione tra le schermate (History API & Slide) ───────────
 const NAV_PARENTS = {
+  'workout-editor': 'menu',
   'sub-programma': 'menu',
   'sub-spinta': 'sub-programma',
   'sub-tirata': 'sub-programma',
@@ -17,6 +18,7 @@ const NAV_PARENTS = {
 
 const SCREEN_LEVELS = {
   'menu': 0,
+  'workout-editor': 1,
   'sub-programma': 1,
   'sub-spinta': 1,
   'sub-tirata': 1,
@@ -75,6 +77,15 @@ window.addEventListener('popstate', function (event) {
   } else {
     activateScreen('menu');
   }
+});
+
+window.addEventListener('message', function (event) {
+  const editorFrame = document.querySelector('#workout-editor iframe');
+  if (event.source !== editorFrame?.contentWindow ||
+      event.data?.type !== 'workout-editor:close') {
+    return;
+  }
+  showScreen('menu');
 });
 
 // Gestione stato iniziale (menu o schermata diretta da hash URL)

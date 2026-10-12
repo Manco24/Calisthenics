@@ -55,6 +55,24 @@ body {
   padding: max(28px, env(safe-area-inset-top)) 20px 48px;
 }
 
+.integrated-editor-screen {
+  width: 100%;
+  max-width: none;
+  min-height: 100vh;
+  padding: 0;
+  overflow: hidden;
+}
+
+.integrated-editor-screen iframe {
+  display: block;
+  width: 100%;
+  height: 100vh;
+  height: 100dvh;
+  min-height: 560px;
+  border: 0;
+  background: #0b0d12;
+}
+
 .screen.active {
   display: block;
   animation: slideIn 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
@@ -825,6 +843,25 @@ button.calendar-day:hover {
   backdrop-filter: blur(8px);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 18px 42px rgba(0, 0, 0, 0.16);
 }
+
+.home-app-selector {
+  min-height: 0;
+  width: 100%;
+  margin: 18px 0 0;
+  padding: 22px 18px;
+  gap: 16px;
+}
+
+.home-app-selector .workout-type-buttons {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  width: min(100%, 560px);
+}
+
+.home-app-selector .workout-type-btn {
+  min-height: 150px;
+}
+
+
 
 :root[data-theme="light"] .workout-type-selector {
   background: rgba(255, 255, 255, 0.34);
@@ -1916,6 +1953,21 @@ button:focus-visible {
   .workout-type-selector {
     min-height: min(58vh, 460px);
     padding: 24px 14px;
+  }
+
+  .home-app-selector {
+    min-height: 0;
+    padding: 18px 12px;
+  }
+
+  .home-app-selector .workout-type-buttons {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .home-app-selector .workout-type-btn {
+    min-height: 142px;
+    padding: 16px 8px;
   }
 
   .workout-sheet-selector {

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'schede-v11';
+const CACHE_NAME = 'schede-v17-clean-editor';
 const APP_FILES = [
   './',
   './index.html',
@@ -7,7 +7,23 @@ const APP_FILES = [
   './calendar-home.js',
   './manifest.json',
   './icon-192.svg',
-  './icon-512.svg'
+  './icon-512.svg',
+  './workout-editor/index.html',
+  './workout-editor/styles.css',
+  './workout-editor/app.js',
+  './workout-editor/workout-parser.js',
+  './workout-editor/workout-validation.js',
+  './workout-editor/ocr-confidence.js',
+  './workout-editor/training-methods-library.js',
+  './workout-editor/workout.schema.json',
+  './workout-editor/workout-template.json',
+  './workout-editor/vendor/pdfjs/pdf.mjs',
+  './workout-editor/vendor/pdfjs/pdf.worker.min.mjs',
+  './workout-editor/vendor/tesseract/tesseract.min.js',
+  './workout-editor/vendor/tesseract/worker.min.js',
+  './workout-editor/vendor/tesseract/tesseract-core-lstm.wasm.js',
+  './workout-editor/vendor/tesseract/lang/ita.traineddata',
+  './workout-editor/vendor/tesseract/lang/eng.traineddata'
 ];
 
 self.addEventListener('install', event => {
@@ -35,16 +51,19 @@ self.addEventListener('fetch', event => {
   if (requestUrl.origin !== self.location.origin) return;
 
   if (event.request.mode === 'navigate') {
+    const fallbackPath = requestUrl.pathname.endsWith('/workout-editor/index.html')
+      ? './workout-editor/index.html'
+      : './index.html';
     event.respondWith(
       fetch(event.request)
         .then(response => {
           if (response.ok) {
             const copy = response.clone();
-            caches.open(CACHE_NAME).then(cache => cache.put('./index.html', copy));
+            caches.open(CACHE_NAME).then(cache => cache.put(fallbackPath, copy));
           }
           return response;
         })
-        .catch(() => caches.match('./index.html'))
+        .catch(() => caches.match(fallbackPath))
     );
     return;
   }

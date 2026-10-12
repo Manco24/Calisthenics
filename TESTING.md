@@ -8,9 +8,12 @@
 
 ## Service worker e offline
 
-- Ricaricare l'app online dopo aver modificato `sw.js`: in DevTools > Application > Service Workers deve risultare attivo `schede-v11` o successivo.
+- Ricaricare l'app online dopo aver modificato `sw.js`: in DevTools > Application > Service Workers deve risultare attivo `schede-v17-clean-editor` o successivo.
 - Aprire una scheda, disconnettere la rete e ricaricare: l'app deve aprirsi dal cache.
 - In modalità offline verificare che CSS, JavaScript, icone e manifest continuino a caricarsi.
+- [x] Aprire "Editor schede" dal menu online, poi offline: la schermata integrata si apre dalla cache e il pulsante "Indietro" torna al menu. Verificati anche importazione di un PDF testuale e OCR di `ocr-demo.png` senza rete, con i relativi runtime, core WebAssembly e modelli italiano/inglese serviti dalla cache.
+- Il primo accesso online scarica e memorizza circa 15 MB di runtime e modelli OCR/PDF.
+- [x] In home gli ingressi "Allenamenti" e "Editor schede" sono affiancati, della stessa dimensione e centrati anche a 390 px; nell'editor integrato restano nascosti titolo scheda, barra di completamento, esercizi e reset allenamento, mentre importazione e JSON restano visibili.
 - Richiedere una risorsa inesistente offline: non deve essere restituito `index.html` al posto della risorsa mancante.
 
 ## Calendario e timer
