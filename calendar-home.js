@@ -690,6 +690,56 @@
     });
     actions.appendChild(watchButton);
 
+    const resetAction = createAction('↺ Inizia da capo (azzera contatori)', 'session-reset');
+    resetAction.addEventListener('click', () => {
+      if (typeof window.WorkoutStorage !== 'undefined' && typeof window.WorkoutStorage.setActiveTrainingDate === 'function') {
+        window.WorkoutStorage.setActiveTrainingDate(key);
+      }
+      const targetScreen = document.getElementById(sheetId);
+      if (targetScreen) {
+        delete targetScreen.dataset.syncedTrainingDate;
+        if (typeof window.resetWorkoutScreen === 'function') {
+          window.resetWorkoutScreen(targetScreen);
+        }
+      }
+      if (sessions[key]) {
+        const totalEx = targetScreen?.querySelectorAll('.exercise')?.length || 5;
+        sessions[key].summary = { completedExercises: 0, totalExercises: totalEx };
+        if (Array.isArray(sessions[key].exercises)) {
+          sessions[key].exercises.forEach(ex => {
+            ex.completed = false;
+            ex.completedSets = 0;
+            ex.maxValue = null;
+            ex.maxSeries = null;
+            ex.totalRepsCompleted = 0;
+            ex.ladderTotalReps = 0;
+            ex.ladderPeak = 0;
+          });
+        }
+        sessions[key].rpe = null;
+        sessions[key].notes = '';
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(sessions));
+        } catch (e) {}
+      }
+      closeDay();
+      renderCalendar();
+      renderStats();
+      if (session.source === 'library' || (sheetId && !WORKOUTS[sheetId])) {
+        if (typeof window.openCustomWorkout === 'function') {
+          window.openCustomWorkout(sheetId, 'menu');
+        } else if (typeof window.showScreen === 'function') {
+          window.showScreen('workout-editor');
+        }
+      } else if (sheetId && typeof window.showScreen === 'function') {
+        window.showScreen(sheetId);
+      }
+      if (typeof window.showToast === 'function') {
+        window.showToast('↺ Sessione azzerata: pronta per iniziare!');
+      }
+    });
+    actions.appendChild(resetAction);
+
     if (sheetId && typeof window.openSheetInEditor === 'function') {
       const editButton = createAction('✏️ Modifica scheda / JSON', 'session-edit');
       editButton.addEventListener('click', () => {

@@ -7,7 +7,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
   <meta name="apple-mobile-web-app-title" content="CaliTracker">
   <title>CaliTracker</title>
-  <link rel="stylesheet" href="style.css?v=5">
+  <link rel="stylesheet" href="style.css?v=32">
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="icon-192.svg">
   <link rel="icon" type="image/svg+xml" href="icon-192.svg">
@@ -23,6 +23,26 @@
         swReloaded = true;
         window.location.reload();
       });
+    }
+
+    async function forceAppPurgeAndReload() {
+      if ('serviceWorker' in navigator) {
+        try {
+          const registrations = await navigator.serviceWorker.getRegistrations();
+          for (const reg of registrations) {
+            await reg.unregister();
+          }
+        } catch (e) {}
+      }
+      if ('caches' in window) {
+        try {
+          const keys = await caches.keys();
+          for (const k of keys) {
+            await caches.delete(k);
+          }
+        } catch (e) {}
+      }
+      window.location.href = window.location.pathname + '?reload=' + Date.now();
     }
   </script>
 </head>
@@ -83,6 +103,7 @@
       <button type="button" id="exportDataButton">⬇ Esporta backup</button>
       <button type="button" id="importDataButton">⬆ Importa backup</button>
       <input type="file" id="importDataInput" accept=".json,application/json" hidden>
+      <button type="button" id="forceRefreshAppBtn" class="force-refresh-btn" onclick="forceAppPurgeAndReload()" title="Scarica subito l'ultima versione e cancella cache vecchia">🔄 Aggiorna app</button>
     </div>
   </section>
   <section class="workout-type-selector home-app-selector" aria-label="Scegli applicativo">
@@ -532,9 +553,9 @@
   <img id="modalImg" src="" alt="Scheda ingrandita">
 </div>
 
-<script src="workout-editor/workout-validation.js"></script>
-<script src="workout-editor/workout-storage.js"></script>
-<script src="script.js"></script>
-<script src="calendar-home.js"></script>
+<script src="workout-editor/workout-validation.js?v=32"></script>
+<script src="workout-editor/workout-storage.js?v=32"></script>
+<script src="script.js?v=32"></script>
+<script src="calendar-home.js?v=32"></script>
 </body>
 </html>

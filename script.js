@@ -1744,33 +1744,45 @@ function collectScreenExercisesSnapshot(screen) {
 }
 
 function syncScreenToCalendarHistory(screen) {
-  if (!screen || typeof WorkoutStorage === 'undefined' || typeof WorkoutStorage.syncCalendarSessionDetails !== 'function') {
-    return;
-  }
+  if (!screen) return;
   const sheetId = getScreenSheetId(screen);
   if (!sheetId) return;
 
   const exercises = collectScreenExercisesSnapshot(screen);
-  const hasAnyActivity = exercises.some(ex =>
-    ex.completed ||
-    ex.completedSets > 0 ||
-    (ex.maxValue !== null && ex.maxValue > 0) ||
-    (ex.totalRepsCompleted !== null && ex.totalRepsCompleted > 0) ||
-    (ex.ladderTotalReps !== null && ex.ladderTotalReps > 0)
-  );
-  if (!hasAnyActivity) return;
-
+  const activeDate = getActiveTrainingDateKey();
   const title = screen.querySelector('.top-bar h2')?.textContent.trim() || sheetId;
-  const presetMeta = typeof WorkoutStorage.getPresetMetadata === 'function'
+
+  const presetMeta = typeof WorkoutStorage !== 'undefined' && typeof WorkoutStorage.getPresetMetadata === 'function'
     ? WorkoutStorage.getPresetMetadata(sheetId)
     : null;
-  const type = presetMeta ? presetMeta.type : 'custom';
+  const type = presetMeta ? (presetMeta.category || presetMeta.type || 'pull') : 'custom';
 
-  WorkoutStorage.syncCalendarSessionDetails(sheetId, {
-    title,
-    type,
-    exercises
-  });
+  const completedCount = exercises.filter(ex => ex.completed).length;
+
+  try {
+    const raw = localStorage.getItem('calisthenics_sessions_v1');
+    const sessions = JSON.parse(raw || '{}');
+    const existing = sessions[activeDate] || {};
+
+    sessions[activeDate] = {
+      ...existing,
+      date: activeDate,
+      type: existing.type || type,
+      title: title || existing.title || 'Allenamento',
+      workoutId: sheetId,
+      sheetId: sheetId,
+      source: existing.source || 'program',
+      summary: {
+        completedExercises: completedCount,
+        totalExercises: exercises.length
+      },
+      exercises: exercises
+    };
+
+    localStorage.setItem('calisthenics_sessions_v1', JSON.stringify(sessions));
+  } catch (e) {
+    console.warn('Impossibile sincronizzare la sessione al calendario:', e);
+  }
 
   if (typeof window.refreshCalendar === 'function') {
     window.refreshCalendar();
@@ -1830,6 +1842,119 @@ function updateScreenProgress(screen, syncHistory = false) {
   }
 }
 
+function resetWorkoutScreen(screen) {
+  if (!screen) return;
+  const sheetId = getScreenSheetId(screen);
+  const activeDate = getActiveTrainingDateKey();
+  const overlay = globalTimerOverlay;
+
+  // 1. Rimuovi tutte le chiavi correlate da localStorage (sia per la data attiva sia residui generici)
+  try {
+    const keysToRemove = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (!k) continue;
+      if (
+        k.startsWith(`calisthenics_sets_${activeDate}_${sheetId}`) ||
+        k.startsWith(`calisthenics_max_${activeDate}_${sheetId}`) ||
+        k.startsWith(`calisthenics_totalreps_${activeDate}_${sheetId}`) ||
+        k.startsWith(`calisthenics_sets_${sheetId}`) ||
+        k.startsWith(`calisthenics_max_${sheetId}`) ||
+        k.startsWith(`calisthenics_totalreps_${sheetId}`)
+      ) {
+        keysToRemove.push(k);
+      }
+    }
+    keysToRemove.forEach(k => localStorage.removeItem(k));
+  } catch (e) {
+    console.warn('Errore pulizia localStorage per reset:', e);
+  }
+
+  // 2. Resetta tutti gli esercizi nel DOM
+  screen.querySelectorAll('.exercise').forEach(exercise => {
+    // A. Ladder
+    if (isIncrementExercise(exercise)) {
+      exercise.classList.remove('exercise-done');
+      const widget = exercise.querySelector('.dip-increment-widget');
+      if (widget) widget.remove();
+      setupDipIncrement(exercise, overlay);
+      return;
+    }
+
+    // B. Reps Totali
+    if (isTotalRepsExercise(exercise)) {
+      exercise.classList.remove('exercise-done');
+      const widget = exercise.querySelector('.ex-totalreps-widget');
+      if (widget) widget.remove();
+      setupTotalRepsWidget(exercise);
+      return;
+    }
+
+    // C. Max inputs (multipli o singoli)
+    saveMaxSeriesProgress(exercise, []);
+    exercise.querySelectorAll('.ex-max-input').forEach(inp => {
+      inp.value = '';
+    });
+
+    // D. Progress serie (0 / total)
+    const progress = exercise.querySelector('.set-progress');
+    if (progress) {
+      const total = progress.dataset.total || '1';
+      progress.dataset.completed = '0';
+      progress.textContent = `0/${total}`;
+      progress.classList.remove('completed');
+    }
+    exercise.classList.remove('exercise-done');
+    saveSetProgress(exercise, 0);
+  });
+
+  // 3. Ricalcola dipendenze Max/2 e barra di completamento
+  updateMaxHalfDependencies(screen);
+  updateScreenProgress(screen, false);
+
+  // 4. Resetta RPE e note per la sessione odierna
+  if (typeof WorkoutStorage !== 'undefined' && typeof WorkoutStorage.saveSessionFeedback === 'function') {
+    WorkoutStorage.saveSessionFeedback(activeDate, { rpe: null, notes: '' });
+  }
+  updateAthleteSessionPanel(screen);
+
+  // 5. Resetta la sessione nel registro calendario
+  try {
+    const rawSessions = localStorage.getItem('calisthenics_sessions_v1');
+    if (rawSessions) {
+      const sessionsMap = JSON.parse(rawSessions);
+      if (sessionsMap && sessionsMap[activeDate]) {
+        const cur = sessionsMap[activeDate];
+        if (cur.sheetId === sheetId || cur.workoutId === sheetId) {
+          cur.summary = { completedExercises: 0, totalExercises: screen.querySelectorAll('.exercise').length };
+          if (Array.isArray(cur.exercises)) {
+            cur.exercises.forEach(ex => {
+              ex.completed = false;
+              ex.completedSets = 0;
+              ex.maxValue = null;
+              ex.maxSeries = null;
+              ex.totalRepsCompleted = 0;
+              ex.ladderTotalReps = 0;
+              ex.ladderPeak = 0;
+            });
+          }
+          cur.rpe = null;
+          cur.notes = '';
+          localStorage.setItem('calisthenics_sessions_v1', JSON.stringify(sessionsMap));
+        }
+      }
+    }
+  } catch (e) {
+    console.warn('Errore reset sessione calendario:', e);
+  }
+
+  // 6. Ridisegna il calendario e le statistiche
+  if (typeof window.refreshCalendar === 'function') {
+    window.refreshCalendar();
+  }
+}
+window.resetWorkoutScreen = resetWorkoutScreen;
+
 function createResetButton(screen, overlay) {
   const existing = screen.querySelector('.reset-workout-btn');
   if (existing) existing.remove();
@@ -1841,45 +1966,35 @@ function createResetButton(screen, overlay) {
   btn.type = 'button';
   btn.className = 'reset-workout-btn';
   btn.innerHTML = '↺ Reset allenamento';
-  btn.addEventListener('click', () => {
-    if (!confirm('Vuoi resettare tutti i contatori di questa scheda?')) return;
 
-    screen.querySelectorAll('.exercise').forEach(exercise => {
-      if (isIncrementExercise(exercise)) {
-        localStorage.removeItem(getDipProgressKey(exercise));
-        exercise.classList.remove('exercise-done');
-        const widget = exercise.querySelector('.dip-increment-widget');
-        if (widget) {
-          widget.remove();
-          setupDipIncrement(exercise, overlay);
-        }
-        return;
-      }
-      if (isTotalRepsExercise(exercise)) {
-        saveTotalRepsProgress(exercise, 0);
-        exercise.classList.remove('exercise-done');
-        const widget = exercise.querySelector('.ex-totalreps-widget');
-        if (widget) {
-          widget.remove();
-          setupTotalRepsWidget(exercise);
-        }
-        return;
-      }
-      saveMaxSeriesProgress(exercise, []);
-      exercise.querySelectorAll('.ex-max-input').forEach(inp => { inp.value = ''; });
-      const progress = exercise.querySelector('.set-progress');
-      if (!progress) return;
-      const total = progress.dataset.total;
-      progress.dataset.completed = '0';
-      progress.textContent = `0/${total}`;
-      progress.classList.remove('completed');
-      exercise.classList.remove('exercise-done');
-      saveSetProgress(exercise, 0);
-    });
+  let confirmTimeout = null;
 
-    updateMaxHalfDependencies(screen);
-    updateScreenProgress(screen, false);
-    if ('vibrate' in navigator) navigator.vibrate(15);
+  btn.addEventListener('click', (e) => {
+    e.stopPropagation();
+
+    // Se non è ancora in stato di conferma, chiedi conferma in-line sul pulsante (immune a blocchi popup mobile)
+    if (!btn.classList.contains('confirming')) {
+      btn.classList.add('confirming');
+      btn.innerHTML = '⚠️ Tocca di nuovo per confermare il reset';
+      if ('vibrate' in navigator) navigator.vibrate(15);
+
+      clearTimeout(confirmTimeout);
+      confirmTimeout = setTimeout(() => {
+        btn.classList.remove('confirming');
+        btn.innerHTML = '↺ Reset allenamento';
+      }, 4000);
+      return;
+    }
+
+    // Secondo tocco entro 4 secondi: esegui il reset
+    clearTimeout(confirmTimeout);
+    btn.classList.remove('confirming');
+    btn.innerHTML = '↺ Reset allenamento';
+
+    resetWorkoutScreen(screen);
+
+    if ('vibrate' in navigator) navigator.vibrate([30, 50, 30]);
+    showToast('↺ Scheda resettata: contatori azzerati a 0!');
   });
 
   const sessionPanel = screen.querySelector('.athlete-session-panel');

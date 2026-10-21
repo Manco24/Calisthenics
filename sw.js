@@ -1,4 +1,4 @@
-const CACHE_NAME = 'schede-v30-network-first';
+const CACHE_NAME = 'schede-v32-network-first';
 const CORE_APP_FILES = [
   './',
   './index.html',
