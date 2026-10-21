@@ -412,6 +412,7 @@ button.calendar-day:hover {
   background: var(--text-dim);
 }
 
+
 .calendar-legend {
   display: flex;
   justify-content: center;
@@ -486,6 +487,51 @@ button.calendar-day:hover {
   font: inherit;
   font-size: 11px;
 }
+.stats-dashboard-collapsible {
+  margin-top: 14px;
+  border: 1px solid var(--card-border);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.02);
+  overflow: hidden;
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.stats-dashboard-collapsible[open] {
+  border-color: rgba(217, 224, 76, 0.35);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.stats-collapsible-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 13px 16px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+  list-style: none;
+  user-select: none;
+}
+
+.stats-collapsible-summary::-webkit-details-marker {
+  display: none;
+}
+
+.stats-collapsible-summary .chevron {
+  font-size: 10px;
+  color: var(--accent);
+  transition: transform 0.25s ease;
+}
+
+.stats-dashboard-collapsible[open] .stats-collapsible-summary .chevron {
+  transform: rotate(180deg);
+}
+
+.stats-dashboard {
+  padding: 0 12px 14px;
+}
+
 .stats-cards {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -731,6 +777,7 @@ button.calendar-day:hover {
   color: #ff8b8b;
 }
 
+
 .custom-session-form {
   margin-top: 18px;
 }
@@ -878,7 +925,62 @@ button.calendar-day:hover {
 .workout-type-buttons {
   display: grid;
   width: min(100%, 720px);
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 14px;
+}
+
+.route-custom {
+  --route-color: #ff9f43;
+  --route-glow: rgba(255, 159, 67, 0.3);
+}
+
+.icon-custom {
+  background: linear-gradient(135deg, rgba(255, 159, 67, 0.25), rgba(255, 159, 67, 0.05));
+  color: #ff9f43;
+  border: 1px solid rgba(255, 159, 67, 0.3);
+}
+
+.custom-sheets-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: min(100%, 720px);
+  margin-bottom: 6px;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.quick-new-sheet-btn,
+.btn-create-sheet {
+  background: rgba(255, 159, 67, 0.15);
+  border: 1px solid rgba(255, 159, 67, 0.45);
+  color: #ff9f43;
+  border-radius: 10px;
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.quick-new-sheet-btn:hover,
+.btn-create-sheet:hover {
+  background: rgba(255, 159, 67, 0.28);
+  border-color: #ff9f43;
+  transform: translateY(-2px);
+}
+
+.empty-custom-sheets-card {
+  grid-column: 1 / -1;
+  padding: 32px 20px;
+  text-align: center;
+  border: 1px dashed var(--card-border);
+  border-radius: 18px;
+  background: rgba(27, 31, 40, 0.4);
+  color: var(--text-dim);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   gap: 14px;
 }
 
@@ -1418,6 +1520,13 @@ button.calendar-day:hover {
   background: rgba(76, 217, 100, 0.18);
   color: #4cd964;
   border-color: rgba(76, 217, 100, 0.5);
+  animation: setCompletePop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes setCompletePop {
+  0% { transform: scale(0.92); }
+  50% { transform: scale(1.08); }
+  100% { transform: scale(1); }
 }
 
 .dip-increment-widget {
@@ -1432,12 +1541,12 @@ button.calendar-day:hover {
 
 .dip-counters {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 8px;
 }
 
 .dip-counter-card {
-  padding: 9px;
+  padding: 8px 6px;
   border: 1px solid var(--card-border);
   border-radius: 10px;
   background: rgba(255, 255, 255, 0.05);
@@ -1449,6 +1558,7 @@ button.calendar-day:hover {
   color: var(--text-dim);
   font-size: 10px;
   font-weight: 700;
+  white-space: nowrap;
 }
 
 .dip-target-counter,
@@ -1456,8 +1566,18 @@ button.calendar-day:hover {
   display: block;
   margin-top: 3px;
   color: var(--increment-color);
-  font-size: 22px;
+  font-size: 20px;
   line-height: 1;
+}
+
+.dip-previous-counter {
+  display: block;
+  margin-top: 3px;
+  color: var(--text);
+  font-size: 16px;
+  font-weight: 800;
+  line-height: 1;
+  white-space: nowrap;
 }
 
 .dip-current {
@@ -1671,6 +1791,53 @@ button.calendar-day:hover {
 @keyframes countdownPulse {
   0%, 100% { transform: translate(-50%, -50%) scale(1); color: var(--accent); }
   50% { transform: translate(-50%, -50%) scale(1.12); color: #ff6b6b; }
+}
+
+.rest-timer-countdown.ready-go {
+  color: #55efc4 !important;
+  transform: translate(-50%, -50%) scale(1.15) !important;
+  text-shadow: 0 0 20px rgba(85, 239, 196, 0.6);
+  font-size: clamp(26px, 8.5vw, 36px);
+}
+
+.rest-timer-top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  padding: 0 4px;
+}
+
+.rest-timer-top-bar .rest-timer-label {
+  margin-bottom: 0;
+  text-align: left;
+  flex: 1;
+}
+
+.timer-mute-btn {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 999px;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 14px;
+  padding: 0;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.timer-mute-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: var(--accent);
+}
+
+.timer-mute-btn.is-muted {
+  border-color: rgba(255, 100, 100, 0.4);
+  background: rgba(255, 100, 100, 0.1);
 }
 
 .rest-timer-label {
@@ -2025,4 +2192,563 @@ button:focus-visible {
     max-width: 100%;
     margin-top: 14px;
   }
+}
+
+/* ─── Fondamenta Unificate: Top Bar Action, Custom Workout, Max & Reps Totali, Storico & Delta ─── */
+.top-bar h2 {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.top-bar-action-btn {
+  flex-shrink: 0;
+  padding: 9px 13px;
+  border: 1px solid rgba(217, 224, 76, 0.45);
+  border-radius: 12px;
+  background: rgba(217, 224, 76, 0.12);
+  color: var(--accent);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.top-bar-action-btn:hover {
+  background: rgba(217, 224, 76, 0.22);
+  border-color: var(--accent);
+  transform: translateY(-1px);
+}
+
+#custom-workout .top-bar h2 {
+  color: #ff9f43;
+}
+
+#custom-workout .exercise {
+  border-left: 3px solid #ff9f43;
+}
+
+#custom-workout .exercise:hover {
+  border-color: #ff9f43;
+  box-shadow: 0 4px 12px rgba(255, 159, 67, 0.25);
+}
+
+#custom-workout .ex-num {
+  background: #ff9f43;
+}
+
+#custom-workout .badge {
+  background: rgba(255, 159, 67, 0.18);
+  color: #ff9f43;
+}
+
+#custom-workout .dip-increment-widget {
+  --increment-color: #ff9f43;
+  --increment-glow: rgba(255, 159, 67, 0.25);
+}
+
+/* Widget Massimale (Max & Max/2 automatico) */
+.ex-max-widget {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 12px;
+  margin-top: 12px;
+  padding: 9px 12px;
+  border: 1px solid rgba(217, 224, 76, 0.3);
+  border-radius: 11px;
+  background: rgba(217, 224, 76, 0.07);
+}
+
+.ex-max-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.ex-max-input {
+  width: 72px;
+  padding: 6px 8px;
+  border: 1px solid var(--card-border);
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.35);
+  color: var(--accent);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 800;
+  text-align: center;
+}
+
+:root[data-theme="light"] .ex-max-input {
+  background: rgba(255, 255, 255, 0.9);
+  color: #18202a;
+}
+
+.ex-max-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  gap: 8px;
+}
+
+.ex-max-series-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(56px, 1fr));
+  gap: 8px;
+  width: 100%;
+  margin-top: 2px;
+}
+
+.ex-max-series-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  background: rgba(0, 0, 0, 0.2);
+  padding: 6px;
+  border-radius: 9px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+:root[data-theme="light"] .ex-max-series-item {
+  background: rgba(255, 255, 255, 0.65);
+  border-color: rgba(0, 0, 0, 0.1);
+}
+
+.ex-max-series-tag {
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--muted, #9aa4b2);
+  letter-spacing: 0.02em;
+}
+
+.ex-max-series-item .ex-max-input {
+  width: 100%;
+  padding: 6px 4px;
+}
+
+.ex-max-half-hint {
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: rgba(76, 217, 100, 0.16);
+  color: #4cd964;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+/* Widget Ripetizioni Totali (es. 60 Reps Totali) */
+.ex-totalreps-widget {
+  margin-top: 12px;
+  padding: 12px;
+  border: 1px solid var(--card-border);
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.16);
+}
+
+.ex-totalreps-widget.completed {
+  border-color: rgba(76, 217, 100, 0.5);
+}
+
+.totalreps-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.totalreps-label {
+  color: var(--text-dim);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.totalreps-counter {
+  color: var(--accent);
+  font-size: 14px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.totalreps-bar-track {
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+  margin-bottom: 10px;
+}
+
+.totalreps-bar-fill {
+  height: 100%;
+  width: 0%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--accent), #4cd964);
+  transition: width 0.25s ease;
+}
+
+.totalreps-actions {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+}
+
+.totalreps-actions button {
+  padding: 8px 6px;
+  border: 1px solid rgba(217, 224, 76, 0.4);
+  border-radius: 8px;
+  background: rgba(217, 224, 76, 0.12);
+  color: var(--text);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.totalreps-actions button:hover {
+  background: rgba(217, 224, 76, 0.24);
+}
+
+.hold-timer-button {
+  border-color: rgba(94, 170, 255, 0.5);
+  background: rgba(94, 170, 255, 0.14);
+  color: var(--pull-color);
+}
+
+/* Storico Dettagliato Sessione & Confronto Miglioramenti (Delta) nel Calendario */
+.session-history-details {
+  margin: 0 0 16px;
+  padding: 12px;
+  border: 1px solid var(--card-border);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.session-history-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 10px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--card-border);
+}
+
+.session-history-header strong {
+  font-size: 13px;
+  color: var(--text);
+}
+
+.session-prev-ref {
+  color: var(--text-dim);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.session-ex-list {
+  display: grid;
+  gap: 7px;
+  max-height: 240px;
+  overflow-y: auto;
+  padding-right: 2px;
+}
+
+.session-ex-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(0, 0, 0, 0.18);
+}
+
+.session-ex-row.is-done {
+  border-color: rgba(76, 217, 100, 0.35);
+  background: rgba(76, 217, 100, 0.06);
+}
+
+.session-ex-topline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.session-ex-name {
+  min-width: 0;
+  flex: 1;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.session-ex-metric {
+  flex-shrink: 0;
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--accent);
+}
+
+.delta-badge {
+  align-self: flex-start;
+  display: inline-block;
+  padding: 2px 7px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.delta-badge.delta-up {
+  background: rgba(76, 217, 100, 0.18);
+  color: #4cd964;
+  border: 1px solid rgba(76, 217, 100, 0.4);
+}
+
+.delta-badge.delta-same {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-dim);
+}
+
+.delta-badge.delta-down {
+  background: rgba(255, 159, 67, 0.15);
+  color: #ff9f43;
+}
+
+.saved-session-actions .session-edit {
+  border-color: rgba(255, 159, 67, 0.45);
+  background: rgba(255, 159, 67, 0.12);
+  color: #ff9f43;
+}
+
+/* ─── 9. Timer on-the-fly tuner & Diario Atleta ───────────────────────── */
+.rest-timer-actions .timer-sub {
+  border-color: rgba(251, 191, 36, 0.5);
+  background: rgba(251, 191, 36, 0.12);
+  color: #fbbf24;
+}
+
+.rest-timer-actions .timer-sub:hover {
+  background: rgba(251, 191, 36, 0.22);
+  box-shadow: 0 4px 14px rgba(251, 191, 36, 0.15);
+}
+
+.rest-timer-actions .timer-add {
+  border-color: rgba(94, 170, 255, 0.5);
+  background: rgba(94, 170, 255, 0.12);
+  color: #70b8ff;
+}
+
+.rest-timer-actions .timer-add:hover {
+  background: rgba(94, 170, 255, 0.22);
+  box-shadow: 0 4px 14px rgba(94, 170, 255, 0.15);
+}
+
+.athlete-session-panel {
+  margin: 24px 0 16px;
+  padding: 16px;
+  background: rgba(27, 30, 39, 0.95);
+  border: 1px solid rgba(217, 224, 76, 0.25);
+  border-radius: 16px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(10px);
+}
+
+.session-panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.session-panel-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: var(--text);
+}
+
+.session-panel-icon {
+  font-size: 16px;
+}
+
+.session-date-badge {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 8px;
+  background: rgba(217, 224, 76, 0.15);
+  border: 1px solid rgba(217, 224, 76, 0.35);
+  color: var(--accent);
+  border-radius: 6px;
+  letter-spacing: 0.5px;
+}
+
+.session-group-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-dim);
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.session-rpe-group {
+  margin-bottom: 16px;
+}
+
+.rpe-pill-selector {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.rpe-pill {
+  flex: 1;
+  min-width: 58px;
+  padding: 8px 6px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  color: var(--text-dim);
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  text-align: center;
+}
+
+.rpe-pill:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text);
+}
+
+.rpe-pill.active {
+  background: rgba(217, 224, 76, 0.22);
+  border-color: var(--accent);
+  color: var(--accent);
+  box-shadow: 0 0 10px rgba(217, 224, 76, 0.25);
+}
+
+.session-notes-group {
+  margin-bottom: 14px;
+}
+
+.session-notes-input {
+  width: 100%;
+  box-sizing: border-box;
+  background: rgba(19, 22, 31, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 10px;
+  padding: 10px 12px;
+  color: var(--text);
+  font: inherit;
+  font-size: 13px;
+  line-height: 1.4;
+  resize: vertical;
+  min-height: 60px;
+  transition: border-color 0.2s ease;
+}
+
+.session-notes-input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(217, 224, 76, 0.2);
+}
+
+.session-panel-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.session-save-btn,
+.session-share-btn {
+  flex: 1;
+  min-width: 140px;
+  padding: 11px 14px;
+  border-radius: 10px;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.session-save-btn {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: var(--text);
+}
+
+.session-save-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.session-share-btn {
+  background: rgba(217, 224, 76, 0.2);
+  border: 1px solid var(--accent);
+  color: var(--accent);
+}
+
+.session-share-btn:hover {
+  background: rgba(217, 224, 76, 0.32);
+  box-shadow: 0 4px 16px rgba(217, 224, 76, 0.25);
+}
+
+/* Modale Calendario - Feedback salvato */
+.session-saved-feedback {
+  margin: 10px 0 14px;
+  padding: 12px 14px;
+  background: rgba(27, 30, 39, 0.7);
+  border-left: 3px solid var(--accent);
+  border-radius: 8px;
+  font-size: 13px;
+}
+
+.saved-rpe-badge {
+  font-weight: 700;
+  color: var(--accent);
+  margin-bottom: 6px;
+  display: inline-block;
+}
+
+.saved-notes-body {
+  color: var(--text-dim);
+  font-style: italic;
+  line-height: 1.4;
+}
+
+.notes-quote-mark {
+  color: var(--accent);
+  font-weight: 900;
+  padding: 0 2px;
+}
+
+.day-action.session-share {
+  border-color: rgba(217, 224, 76, 0.45);
+  background: rgba(217, 224, 76, 0.15);
+  color: var(--accent);
+}
+
+.day-action.session-share:hover {
+  background: rgba(217, 224, 76, 0.28);
+  box-shadow: 0 4px 14px rgba(217, 224, 76, 0.2);
 }

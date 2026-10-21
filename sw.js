@@ -1,5 +1,5 @@
-const CACHE_NAME = 'schede-v17-clean-editor';
-const APP_FILES = [
+const CACHE_NAME = 'schede-v29-multiset-max';
+const CORE_APP_FILES = [
   './',
   './index.html',
   './style.css',
@@ -11,12 +11,16 @@ const APP_FILES = [
   './workout-editor/index.html',
   './workout-editor/styles.css',
   './workout-editor/app.js',
+  './workout-editor/workout-storage.js',
   './workout-editor/workout-parser.js',
   './workout-editor/workout-validation.js',
   './workout-editor/ocr-confidence.js',
   './workout-editor/training-methods-library.js',
   './workout-editor/workout.schema.json',
-  './workout-editor/workout-template.json',
+  './workout-editor/workout-template.json'
+];
+
+const OPTIONAL_VENDOR_FILES = [
   './workout-editor/vendor/pdfjs/pdf.mjs',
   './workout-editor/vendor/pdfjs/pdf.worker.min.mjs',
   './workout-editor/vendor/tesseract/tesseract.min.js',
@@ -29,7 +33,10 @@ const APP_FILES = [
 self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME)
-      .then(cache => cache.addAll(APP_FILES))
+      .then(async cache => {
+        await cache.addAll(CORE_APP_FILES);
+        await Promise.allSettled(OPTIONAL_VENDOR_FILES.map(url => cache.add(url)));
+      })
       .then(() => self.skipWaiting())
   );
 });
