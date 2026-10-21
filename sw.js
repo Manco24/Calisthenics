@@ -1,4 +1,4 @@
-const CACHE_NAME = 'schede-v29-multiset-max';
+const CACHE_NAME = 'schede-v30-network-first';
 const CORE_APP_FILES = [
   './',
   './index.html',
@@ -34,7 +34,7 @@ self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then(async cache => {
-        await cache.addAll(CORE_APP_FILES);
+        await cache.addAll(CORE_APP_FILES.map(url => new Request(url, { cache: 'reload' })));
         await Promise.allSettled(OPTIONAL_VENDOR_FILES.map(url => cache.add(url)));
       })
       .then(() => self.skipWaiting())
@@ -57,35 +57,23 @@ self.addEventListener('fetch', event => {
   const requestUrl = new URL(event.request.url);
   if (requestUrl.origin !== self.location.origin) return;
 
-  if (event.request.mode === 'navigate') {
-    const fallbackPath = requestUrl.pathname.endsWith('/workout-editor/index.html')
-      ? './workout-editor/index.html'
-      : './index.html';
-    event.respondWith(
-      fetch(event.request)
-        .then(response => {
-          if (response.ok) {
-            const copy = response.clone();
-            caches.open(CACHE_NAME).then(cache => cache.put(fallbackPath, copy));
-          }
-          return response;
-        })
-        .catch(() => caches.match(fallbackPath))
-    );
-    return;
-  }
+  const isNavigate = event.request.mode === 'navigate';
+  const cacheKey = isNavigate
+    ? (requestUrl.pathname.endsWith('/workout-editor/index.html') ? './workout-editor/index.html' : './index.html')
+    : event.request;
 
+  // Network-first: con connessione prende SEMPRE la versione aggiornata (bypassando la cache HTTP di GitHub Pages),
+  // senza connessione (palestra offline) usa la copia in cache.
   event.respondWith(
-    caches.match(event.request, { ignoreSearch: true }).then(cached => {
-      if (cached) return cached;
-      return fetch(event.request).then(response => {
+    fetch(requestUrl.href, { cache: 'no-cache', credentials: 'same-origin' })
+      .then(response => {
         if (response.ok) {
           const copy = response.clone();
-          caches.open(CACHE_NAME).then(cache => cache.put(event.request, copy));
+          caches.open(CACHE_NAME).then(cache => cache.put(cacheKey, copy));
         }
         return response;
-      });
-    })
+      })
+      .catch(() => caches.match(cacheKey, { ignoreSearch: true }))
   );
 });
 

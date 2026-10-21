@@ -13,8 +13,16 @@
   <link rel="icon" type="image/svg+xml" href="icon-192.svg">
   <script>
     if ('serviceWorker' in navigator && ['http:', 'https:'].includes(window.location.protocol)) {
-      navigator.serviceWorker.register('./sw.js')
+      navigator.serviceWorker.register('./sw.js', { updateViaCache: 'none' })
+        .then(reg => { reg.update().catch(() => {}); })
         .catch(error => console.error('Registrazione service worker fallita:', error));
+      // Quando una nuova versione prende il controllo, ricarica una sola volta per usare subito i file aggiornati
+      let swReloaded = false;
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (swReloaded) return;
+        swReloaded = true;
+        window.location.reload();
+      });
     }
   </script>
 </head>
