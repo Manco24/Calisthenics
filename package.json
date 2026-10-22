@@ -4,13 +4,14 @@
   "description": "",
   "main": "app.js",
   "scripts": {
-    "test": "node parser-tests.js && node storage-tests.js && node calendar-tests.js && node flow-tests.js",
-    "test:parser": "node parser-tests.js",
-    "test:storage": "node storage-tests.js",
+    "start": "node server.js",
+    "test": "node workout-editor/parser-tests.js && node workout-editor/storage-tests.js && node calendar-tests.js && node flow-tests.js && node ocr-benchmark.js",
+    "test:parser": "node workout-editor/parser-tests.js",
+    "test:storage": "node workout-editor/storage-tests.js",
     "test:calendar": "node calendar-tests.js",
     "test:flow": "node flow-tests.js",
     "test:ocr": "node ocr-benchmark.js",
-    "test:all": "node parser-tests.js && node storage-tests.js && node calendar-tests.js && node flow-tests.js && node ocr-benchmark.js"
+    "test:all": "node workout-editor/parser-tests.js && node workout-editor/storage-tests.js && node calendar-tests.js && node flow-tests.js && node ocr-benchmark.js"
   },
   "keywords": [],
   "author": "",

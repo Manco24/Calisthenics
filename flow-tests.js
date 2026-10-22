@@ -325,6 +325,64 @@ runTest('serie contatori e badge dinamici Max, Max/2 Prec e multi-set per schede
   assert.strictEqual(computeTotalSets(piegSpinta2), 5, 'Spinta 2 ex 1 deve contare 5 serie (0/5)');
 });
 
+// 7. Reset profondo della scheda: azzera Ladder, Reps Totali, Max series e Set progress isolando le date
+runTest('reset profondo della scheda azzera Ladder, Reps Totali, Max series preservando le altre date', () => {
+  const store = new Map();
+  const mockLocalStorage = {
+    getItem: (k) => (store.has(k) ? store.get(k) : null),
+    setItem: (k, v) => store.set(k, String(v)),
+    removeItem: (k) => store.delete(k),
+    key: (i) => Array.from(store.keys())[i],
+    get length() { return store.size; }
+  };
+
+  const activeDate = '2026-10-21';
+  const otherDate = '2026-10-22';
+  const sheetId = 'tirata-1';
+
+  // Popola dati per activeDate su tirata-1
+  mockLocalStorage.setItem(`calisthenics_sets_${activeDate}_trazioni-ladder_dip_progress_v2`, JSON.stringify({
+    current: 4, max: 4, previousReps: 3, completedReps: 16, finished: true
+  }));
+  mockLocalStorage.setItem(`calisthenics_totalreps_${activeDate}_tirata-1-2`, '30');
+  mockLocalStorage.setItem(`calisthenics_max_${activeDate}_tirata-1-3`, JSON.stringify([12, 10, 8, 8]));
+  mockLocalStorage.setItem(`calisthenics_sets_${activeDate}_tirata-1-3`, '4');
+
+  // Popola dati per otherDate su tirata-1 (devono essere conservati)
+  mockLocalStorage.setItem(`calisthenics_sets_${otherDate}_trazioni-ladder_dip_progress_v2`, JSON.stringify({
+    current: 5, max: 5, previousReps: 4, completedReps: 25, finished: true
+  }));
+  mockLocalStorage.setItem(`calisthenics_totalreps_${otherDate}_tirata-1-2`, '25');
+
+  // Esegui la logica di pulizia mirata e profonda di resetWorkoutScreen
+  const allExIds = new Set([sheetId, 'trazioni-ladder', 'tirata-1-1', 'tirata-1-2', 'tirata-1-3']);
+  const idList = Array.from(allExIds);
+  const keysToRemove = [];
+  for (let i = 0; i < mockLocalStorage.length; i++) {
+    const k = mockLocalStorage.key(i);
+    if (!k) continue;
+    if (k.startsWith('calisthenics_')) {
+      const matchesTarget = idList.some(id => k.includes(id));
+      if (matchesTarget) {
+        if (k.includes(activeDate) || !k.match(/\d{4}-\d{2}-\d{2}/)) {
+          keysToRemove.push(k);
+        }
+      }
+    }
+  }
+  keysToRemove.forEach(k => mockLocalStorage.removeItem(k));
+
+  // Verifica che per activeDate tutto sia azzerato
+  assert.strictEqual(mockLocalStorage.getItem(`calisthenics_sets_${activeDate}_trazioni-ladder_dip_progress_v2`), null, 'Ladder activeDate deve essere rimosso');
+  assert.strictEqual(mockLocalStorage.getItem(`calisthenics_totalreps_${activeDate}_tirata-1-2`), null, 'Total reps activeDate deve essere rimosso');
+  assert.strictEqual(mockLocalStorage.getItem(`calisthenics_max_${activeDate}_tirata-1-3`), null, 'Max activeDate deve essere rimosso');
+  assert.strictEqual(mockLocalStorage.getItem(`calisthenics_sets_${activeDate}_tirata-1-3`), null, 'Sets progress activeDate deve essere rimosso');
+
+  // Verifica che per otherDate tutto sia preservato al 100%
+  assert.ok(mockLocalStorage.getItem(`calisthenics_sets_${otherDate}_trazioni-ladder_dip_progress_v2`), 'Ladder otherDate deve essere intatto');
+  assert.strictEqual(mockLocalStorage.getItem(`calisthenics_totalreps_${otherDate}_tirata-1-2`), '25', 'Total reps otherDate deve essere intatto');
+});
+
 if (failed > 0) {
   console.error(`\n${failed} test flow falliti.`);
   process.exit(1);

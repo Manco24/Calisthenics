@@ -1,0 +1,726 @@
+/* ==========================================================================
+   ANIMAZIONE D'ENTRATA HOME: "KALÓS · STHÉNOS" (CaliTrack)
+   καλός (bello) + σθένος (forza) = Calisthenics
+   Spec: docs/specifica_animazione_home_calitrack.md
+   ========================================================================== */
+
+/* --- Font self-hosted (funzionano anche offline nella PWA) --- */
+@font-face {
+  font-family: 'Syne';
+  font-style: normal;
+  font-weight: 600 800;
+  font-display: swap;
+  src: url('fonts/syne-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Syne';
+  font-style: normal;
+  font-weight: 600 800;
+  font-display: swap;
+  src: url('fonts/syne-greek.woff2') format('woff2');
+  unicode-range: U+0370-0377, U+037A-037F, U+0384-038A, U+038C, U+038E-03A1, U+03A3-03FF;
+}
+@font-face {
+  font-family: 'GFS Didot';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('fonts/gfsdidot-greek.woff2') format('woff2');
+  unicode-range: U+0370-0377, U+037A-037F, U+0384-038A, U+038C, U+038E-03A1, U+03A3-03FF;
+}
+@font-face {
+  font-family: 'Cinzel';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('fonts/cinzel-700-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+/* Già vista in questa sessione: niente overlay (evita il flash al reload) */
+html.cali-intro-seen .cali-intro-overlay {
+  display: none !important;
+}
+
+/* Blocca lo scroll della Home mentre l'intro è in scena */
+html.cali-intro-playing,
+html.cali-intro-playing body {
+  overflow: hidden;
+}
+
+.cali-intro-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle at 50% 42%, #171c26 0%, #0b0d12 55%, #050608 100%);
+  overflow: hidden;
+  user-select: none;
+  -webkit-user-select: none;
+  cursor: pointer;
+  transition: opacity 0.55s cubic-bezier(0.76, 0, 0.24, 1),
+              transform 0.65s cubic-bezier(0.76, 0, 0.24, 1),
+              visibility 0s linear 0.65s;
+}
+
+.cali-intro-overlay.is-exiting {
+  opacity: 0;
+  transform: scale(1.08);
+  pointer-events: none;
+  visibility: hidden;
+}
+
+/* Griglia architettonica aurea di sfondo */
+.cali-intro-bg-grid {
+  position: absolute;
+  inset: -20%;
+  background-image:
+    linear-gradient(to right, rgba(217, 224, 76, 0.035) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(217, 224, 76, 0.035) 1px, transparent 1px);
+  background-size: 44px 44px;
+  -webkit-mask-image: radial-gradient(circle at center, rgba(0, 0, 0, 0.85) 10%, transparent 70%);
+  mask-image: radial-gradient(circle at center, rgba(0, 0, 0, 0.85) 10%, transparent 70%);
+  opacity: 0;
+  animation: caliGridBreath 3s ease-out forwards;
+}
+
+/* Alone volt dietro al logo */
+.cali-intro-glow {
+  position: absolute;
+  width: 420px;
+  height: 420px;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -62%) scale(0.6);
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(217, 224, 76, 0.16) 0%, rgba(217, 224, 76, 0.04) 40%, transparent 70%);
+  opacity: 0;
+  animation: caliGlowIn 1.2s cubic-bezier(0.16, 1, 0.3, 1) 0.9s forwards;
+  pointer-events: none;
+}
+
+.cali-intro-stage {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 26px;
+  padding: 24px;
+}
+
+/* --- LOGO SVG CHE SI COSTRUISCE --- */
+.cali-logo-wrap {
+  position: relative;
+  width: 176px;
+  height: 176px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cali-logo-svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+/* Tracciati normalizzati con pathLength="100" */
+.cali-logo-svg .draw {
+  stroke-dasharray: 100;
+  stroke-dashoffset: 100;
+}
+
+/* --- 1. COSTRUZIONE GEOMETRICA AUREA (KALÓS) --- */
+.svg-guide-axis {
+  stroke: rgba(242, 242, 240, 0.14);
+  stroke-width: 1;
+  animation: caliDraw 0.5s ease-out 0.05s forwards;
+}
+
+.svg-guide-ring {
+  stroke: rgba(217, 224, 76, 0.22);
+  stroke-width: 1.2;
+  stroke-dasharray: 4 6;
+  opacity: 0;
+  transform-origin: 120px 120px;
+  animation: caliGuideReveal 0.85s ease-out 0.05s forwards;
+}
+
+.svg-kalos-ring {
+  stroke: #f2f2f0;
+  stroke-width: 3.5;
+  stroke-linecap: round;
+  transform: rotate(-90deg);
+  transform-origin: 120px 120px;
+  animation: caliDraw 0.8s cubic-bezier(0.65, 0, 0.35, 1) 0.15s forwards;
+  filter: drop-shadow(0 0 6px rgba(242, 242, 240, 0.25));
+}
+
+.svg-quadrant-tick {
+  stroke: #d9e04c;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  opacity: 0;
+  animation: caliFadeIn 0.3s ease-out 0.85s forwards;
+  filter: drop-shadow(0 0 4px #d9e04c);
+}
+
+/* --- 2. SBARRA PER TRAZIONI CALISTHENICA --- */
+/* Supporti verticali della sbarra */
+.svg-pullup-bar-support {
+  stroke: rgba(242, 242, 240, 0.24);
+  stroke-width: 3.5;
+  stroke-linecap: round;
+  stroke-dasharray: 100;
+  stroke-dashoffset: 100;
+  animation: caliDraw 0.4s ease-out 0.08s forwards;
+}
+
+.svg-pullup-bracket {
+  fill: rgba(242, 242, 240, 0.4);
+  opacity: 0;
+  animation: caliGripPop 0.3s ease-out 0.1s forwards;
+}
+
+/* Sbarra orizzontale principale (con flessione dinamica sotto carico) */
+.svg-pullup-bar-main {
+  fill: none;
+  stroke: #f2f2f0;
+  stroke-width: 5;
+  stroke-linecap: round;
+  stroke-dasharray: 100;
+  stroke-dashoffset: 100;
+  animation:
+    caliDraw 0.42s cubic-bezier(0.16, 1, 0.3, 1) 0.1s forwards,
+    caliBarFlex 1.05s linear 0.42s forwards;
+  filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.25));
+}
+
+/* Mani che afferrano la sbarra (seguono la flessione elastica della sbarra) */
+.svg-pullup-grip {
+  fill: #d9e04c;
+  opacity: 0;
+  transform-origin: center;
+  transform-box: fill-box;
+  animation:
+    caliGripPop 0.32s cubic-bezier(0.34, 1.56, 0.64, 1) 0.24s forwards,
+    caliGripFollowBar 1.05s linear 0.42s forwards;
+  filter: drop-shadow(0 0 6px #d9e04c);
+}
+
+/* --- 3. BRACCIA DELL'ATLETA (Cinematica inversa sincronizzata al 100%) --- */
+.svg-athlete-arm {
+  fill: none;
+  stroke: #d9e04c;
+  stroke-width: 5.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  filter: drop-shadow(0 0 8px rgba(217, 224, 76, 0.55));
+}
+
+.svg-arm-left {
+  animation: caliPullLeftArm 1.05s linear 0.42s forwards;
+}
+
+.svg-arm-right {
+  animation: caliPullRightArm 1.05s linear 0.42s forwards;
+}
+
+/* Fulcri articolari sui gomiti (seguono l'articolazione in tempo reale) e al petto */
+.svg-joint-node {
+  fill: #d9e04c;
+  stroke: #0b0d12;
+  stroke-width: 2.5;
+  opacity: 0;
+  transform: scale(0);
+  transform-origin: center;
+  transform-box: fill-box;
+}
+
+.node-elbow-left {
+  animation: caliElbowNodeLeft 1.05s linear 0.42s forwards;
+}
+
+.node-elbow-right {
+  animation: caliElbowNodeRight 1.05s linear 0.42s forwards;
+}
+
+.node-chest {
+  animation: caliNodePop 0.42s cubic-bezier(0.34, 1.56, 0.64, 1) 1.24s forwards;
+}
+
+/* --- 4. CORPO ATLETA CON BIOMECCANICA FLUIDA E DUE GAMBE DISTINTE --- */
+.svg-athlete-body {
+  animation: caliBodyAscend 1.05s linear 0.42s forwards;
+}
+
+/* Collo anatomico */
+.svg-athlete-neck {
+  stroke: rgba(242, 242, 240, 0.75);
+  stroke-width: 3.8;
+  stroke-linecap: round;
+}
+
+/* Spalle / Clavicola forte (retrazione scapolare) */
+.svg-athlete-shoulders {
+  fill: none;
+  stroke: #d9e04c;
+  stroke-width: 5.5;
+  stroke-linecap: round;
+  filter: drop-shadow(0 0 6px rgba(217, 224, 76, 0.4));
+  animation: caliShouldersRetract 1.05s linear 0.42s forwards;
+}
+
+/* Spina dorsale / Torso a V */
+.svg-athlete-spine {
+  stroke: #f2f2f0;
+  stroke-width: 5;
+  stroke-linecap: round;
+}
+
+/* Testa dell'atleta (depressione scapolare + superamento sbarra nel pull-up) */
+.svg-athlete-head {
+  fill: #0b0d12;
+  stroke: #f2f2f0;
+  stroke-width: 4;
+  animation: caliHeadLockout 1.05s linear 0.42s forwards;
+}
+
+/* Bacino (raccordo alle anche) */
+.svg-athlete-pelvis {
+  stroke: #f2f2f0;
+  stroke-width: 4.5;
+  stroke-linecap: round;
+}
+
+/* Due gambe distinte (sinistra e destra) */
+.svg-athlete-leg {
+  fill: none;
+  stroke: #f2f2f0;
+  stroke-width: 4.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.svg-leg-left {
+  animation: caliLegLeftMotion 1.05s linear 0.42s forwards;
+}
+
+.svg-leg-right {
+  animation: caliLegRightMotion 1.05s linear 0.42s forwards;
+}
+
+/* Onda d'urto al petto nel momento del chest-to-bar lockout (54/240 = 22.5%, 120/240 = 50%) */
+.cali-shockwave {
+  position: absolute;
+  top: 22.5%;
+  left: 50%;
+  width: 10px;
+  height: 10px;
+  margin: -5px 0 0 -5px;
+  border-radius: 50%;
+  border: 2px solid #d9e04c;
+  opacity: 0;
+  pointer-events: none;
+  animation: caliShockwave 0.75s cubic-bezier(0.16, 1, 0.3, 1) 1.24s forwards;
+}
+
+/* --- WORDMARK "CΛLITRΛCK" --- */
+.cali-wordmark-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+
+.cali-wordmark {
+  position: relative;
+  display: flex;
+  flex-wrap: nowrap;
+  white-space: nowrap;
+  align-items: baseline;
+  font-family: 'Syne', 'Arial Black', sans-serif;
+  font-weight: 800;
+  font-size: clamp(1.9rem, 8.4vw, 3.2rem);
+  letter-spacing: -0.02em;
+  line-height: 1.05;
+  text-transform: uppercase;
+  overflow: hidden;
+  /* padding ampio per non tagliare il bagliore, compensato dal margine negativo */
+  padding: 0.32em 0.45em;
+  margin: -0.32em -0.45em;
+  max-width: calc(100vw - 8px);
+}
+
+.word-cali,
+.word-track {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+.word-cali {
+  color: #f2f2f0;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
+}
+
+.word-track {
+  color: #d9e04c;
+  margin-left: 0.04em;
+  text-shadow: 0 0 16px rgba(217, 224, 76, 0.28);
+}
+
+.cali-wordmark .char {
+  display: inline-block;
+  opacity: 0;
+  transform: translateY(110%);
+  animation: caliCharRise 0.52s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation-delay: calc(0.88s + (var(--i) * 0.038s));
+}
+
+/* La Lambda di CΛLI attraversata dal taglio luminoso giallo */
+.char-lambda {
+  position: relative;
+}
+.word-cali .char-lambda::after {
+  content: '';
+  position: absolute;
+  left: 30%;
+  right: 30%;
+  bottom: 36%;
+  height: 0.07em;
+  min-height: 3px;
+  background: #d9e04c;
+  border-radius: 2px;
+  box-shadow: 0 0 10px #d9e04c;
+}
+
+/* Lampo cinetico diagonale */
+.cali-wordmark-slash {
+  position: absolute;
+  top: 52%;
+  left: -120%;
+  width: 90%;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #ffffff, #d9e04c, transparent);
+  transform: rotate(-8deg);
+  opacity: 0;
+  animation: caliSlash 0.65s cubic-bezier(0.22, 1, 0.36, 1) 1.25s forwards;
+  pointer-events: none;
+}
+
+/* --- SIGILLO ETIMOLOGICO --- */
+.cali-etymology {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  opacity: 0;
+  transform: translateY(8px);
+  animation: caliEtymReveal 0.55s ease-out 1.32s forwards;
+}
+
+.etym-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.etym-greek {
+  font-family: 'GFS Didot', 'Times New Roman', Georgia, serif;
+  font-size: clamp(0.95rem, 3.6vw, 1.1rem);
+  letter-spacing: 0.3em;
+  margin-right: -0.3em; /* compensa lo spacing finale per centrare */
+  color: #d9e04c;
+  text-shadow: 0 0 14px rgba(217, 224, 76, 0.3);
+}
+
+.etym-dot {
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  margin: 0 0.55em 0 0.25em; /* lo spacing della lettera precedente fa il resto */
+  vertical-align: middle;
+  background: #d9e04c;
+  transform: rotate(45deg);
+  box-shadow: 0 0 8px rgba(217, 224, 76, 0.6);
+}
+
+.etym-meaning {
+  font-family: 'Cinzel', Georgia, serif;
+  font-weight: 700;
+  font-size: clamp(0.62rem, 2.4vw, 0.72rem);
+  letter-spacing: 0.42em;
+  margin-right: -0.42em;
+  color: #9a9ba3;
+}
+
+.etym-meaning b {
+  color: #f2f2f0;
+  font-weight: 700;
+}
+
+.etym-line {
+  display: block;
+  width: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #d9e04c, transparent);
+  animation: caliLineExpand 0.5s ease-out 1.4s forwards;
+}
+
+.cali-intro-skip-hint {
+  position: absolute;
+  bottom: max(28px, env(safe-area-inset-bottom));
+  left: 0;
+  right: 0;
+  text-align: center;
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: 0.6rem;
+  letter-spacing: 0.35em;
+  color: rgba(154, 155, 163, 0.55);
+  opacity: 0;
+  animation: caliEtymReveal 0.6s ease-out 1.6s forwards;
+  pointer-events: none;
+}
+
+/* --- TITOLO "TRACKER ALLENAMENTI" COME TRIGGER D'ENTRATA --- */
+.app-title {
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  display: block;
+  outline: none;
+  transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1),
+              filter 0.18s ease,
+              opacity 0.18s ease;
+}
+
+.app-title:hover {
+  filter: drop-shadow(0 0 14px var(--accent-glow, rgba(217, 224, 76, 0.35)));
+  transform: translateY(-1px);
+}
+
+.app-title:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 4px;
+  border-radius: 8px;
+}
+
+.app-title:active {
+  transform: scale(0.96);
+  opacity: 0.85;
+}
+
+/* --- CASCATA D'INGRESSO DELLA HOME --- */
+body.cali-intro-cascade #menu > * {
+  animation: caliHomeCascadeIn 0.55s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+}
+body.cali-intro-cascade #menu > *:nth-child(1) { animation-delay: 0.04s; }
+body.cali-intro-cascade #menu > *:nth-child(2) { animation-delay: 0.11s; }
+body.cali-intro-cascade #menu > *:nth-child(3) { animation-delay: 0.18s; }
+body.cali-intro-cascade #menu > *:nth-child(4) { animation-delay: 0.25s; }
+body.cali-intro-cascade #menu > *:nth-child(n+5) { animation-delay: 0.32s; }
+
+/* --- KEYFRAMES BIOMECCANICI SINCRONIZZATI (8 fasi: 0%, 12%, 26%, 45%, 66%, 82%, 92%, 100%) --- */
+@keyframes caliDraw { to { stroke-dashoffset: 0; } }
+
+@keyframes caliGripPop {
+  0%   { opacity: 0; transform: scale(0.2); }
+  70%  { opacity: 1; transform: scale(1.28); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+/* Flessione elastica della sbarra in acciaio sotto trazione */
+@keyframes caliBarFlex {
+  0%   { d: path("M 26 54 Q 120 54 214 54"); }
+  12%  { d: path("M 26 54 Q 120 56.2 214 54"); }
+  26%  { d: path("M 26 54 Q 120 57.6 214 54"); }
+  45%  { d: path("M 26 54 Q 120 58.0 214 54"); }
+  66%  { d: path("M 26 54 Q 120 55.4 214 54"); }
+  82%  { d: path("M 26 54 Q 120 52.6 214 54"); }
+  92%  { d: path("M 26 54 Q 120 54.5 214 54"); }
+  100% { d: path("M 26 54 Q 120 54 214 54"); }
+}
+
+/* Le mani seguono il micro-piegamento della sbarra */
+@keyframes caliGripFollowBar {
+  0%   { transform: translateY(0px) scale(1); }
+  12%  { transform: translateY(1px) scale(1); }
+  26%  { transform: translateY(1.6px) scale(1.05); }
+  45%  { transform: translateY(1.8px) scale(1.06); }
+  66%  { transform: translateY(0.6px) scale(1.04); }
+  82%  { transform: translateY(-0.6px) scale(1.08); }
+  92%  { transform: translateY(0.2px) scale(1.02); }
+  100% { transform: translateY(0px) scale(1); }
+}
+
+/* Salita del corpo: pre-carico -> depressione scapolare -> trazione esplosiva -> overshoot -> lockout */
+@keyframes caliBodyAscend {
+  0%   { transform: translateY(0px); }
+  12%  { transform: translateY(2px); }
+  26%  { transform: translateY(-7px); }
+  45%  { transform: translateY(-30px); }
+  66%  { transform: translateY(-54px); }
+  82%  { transform: translateY(-64.5px); }
+  92%  { transform: translateY(-61.5px); }
+  100% { transform: translateY(-62px); }
+}
+
+/* Retrazione scapolare: apertura pettorale e spalle */
+@keyframes caliShouldersRetract {
+  0%   { d: path("M 105 116 L 135 116"); }
+  12%  { d: path("M 105 116 L 135 116"); }
+  26%  { d: path("M 103.5 116 L 136.5 116"); }
+  45%  { d: path("M 103 116 L 137 116"); }
+  66%  { d: path("M 103.5 116 L 136.5 116"); }
+  82%  { d: path("M 104 116 L 136 116"); }
+  92%  { d: path("M 104 116 L 136 116"); }
+  100% { d: path("M 104 116 L 136 116"); }
+}
+
+/* Braccio sinistro: mano e spalla saldate al decimo di pixel con sbarra e clavicola */
+@keyframes caliPullLeftArm {
+  0%   { d: path("M 88 54 L 96 85.5 L 105 116"); }
+  12%  { d: path("M 88 55 L 95 87 L 105 118"); }
+  26%  { d: path("M 88 55.6 L 86.5 86.5 L 103.5 109"); }
+  45%  { d: path("M 88 55.8 L 75.5 83 L 103 86"); }
+  66%  { d: path("M 88 54.6 L 71 78.5 L 103.5 62"); }
+  82%  { d: path("M 88 53.4 L 68.5 73.5 L 104 51.5"); }
+  92%  { d: path("M 88 54.2 L 70.5 76.5 L 104 54.5"); }
+  100% { d: path("M 88 54 L 70 76 L 104 54"); }
+}
+
+/* Braccio destro: mano e spalla saldate al decimo di pixel con sbarra e clavicola */
+@keyframes caliPullRightArm {
+  0%   { d: path("M 152 54 L 144 85.5 L 135 116"); }
+  12%  { d: path("M 152 55 L 145 87 L 135 118"); }
+  26%  { d: path("M 152 55.6 L 153.5 86.5 L 136.5 109"); }
+  45%  { d: path("M 152 55.8 L 164.5 83 L 137 86"); }
+  66%  { d: path("M 152 54.6 L 169 78.5 L 136.5 62"); }
+  82%  { d: path("M 152 53.4 L 171.5 73.5 L 136 51.5"); }
+  92%  { d: path("M 152 54.2 L 169.5 76.5 L 136 54.5"); }
+  100% { d: path("M 152 54 L 170 76 L 136 54"); }
+}
+
+/* Fulcro gomito sinistro: segue esattamente la coordinata del gomito durante la trazione */
+@keyframes caliElbowNodeLeft {
+  0%   { opacity: 0; transform: translate(26px, 9.5px) scale(0.3); }
+  12%  { opacity: 0.25; transform: translate(25px, 11px) scale(0.5); }
+  26%  { opacity: 0.65; transform: translate(16.5px, 10.5px) scale(0.75); }
+  45%  { opacity: 0.9; transform: translate(5.5px, 7px) scale(0.95); }
+  66%  { opacity: 1; transform: translate(1px, 2.5px) scale(1.05); }
+  82%  { opacity: 1; transform: translate(-1.5px, -2.5px) scale(1.25); }
+  92%  { opacity: 1; transform: translate(0.5px, 0.5px) scale(0.96); }
+  100% { opacity: 1; transform: translate(0px, 0px) scale(1); }
+}
+
+/* Fulcro gomito destro: segue esattamente la coordinata del gomito durante la trazione */
+@keyframes caliElbowNodeRight {
+  0%   { opacity: 0; transform: translate(-26px, 9.5px) scale(0.3); }
+  12%  { opacity: 0.25; transform: translate(-25px, 11px) scale(0.5); }
+  26%  { opacity: 0.65; transform: translate(-16.5px, 10.5px) scale(0.75); }
+  45%  { opacity: 0.9; transform: translate(-5.5px, 7px) scale(0.95); }
+  66%  { opacity: 1; transform: translate(-1px, 2.5px) scale(1.05); }
+  82%  { opacity: 1; transform: translate(1.5px, -2.5px) scale(1.25); }
+  92%  { opacity: 1; transform: translate(-0.5px, 0.5px) scale(0.96); }
+  100% { opacity: 1; transform: translate(0px, 0px) scale(1); }
+}
+
+@keyframes caliFadeIn { to { opacity: 1; } }
+
+/* GAMBA SINISTRA: dead hang rilassato -> attivazione hollow body -> inerzia al picco -> tenuta isometrica */
+@keyframes caliLegLeftMotion {
+  0%   { d: path("M 114 154 L 112 184 L 111 214 L 107 216"); }
+  12%  { d: path("M 114 154 L 112.5 184.5 L 111.5 214.5 L 108 217"); }
+  26%  { d: path("M 114 154 L 113.5 184 L 114.5 214 L 112 218"); }
+  45%  { d: path("M 114 154 L 111 181 L 114 209 L 111 214"); }
+  66%  { d: path("M 114 154 L 111.5 182 L 114.5 210 L 111.5 215"); }
+  82%  { d: path("M 114 154 L 110.5 180 L 113 207 L 109.5 211"); }
+  92%  { d: path("M 114 154 L 112.5 183 L 114 211 L 110.5 214"); }
+  100% { d: path("M 114 154 L 113 184 L 114.5 212 L 111 215"); }
+}
+
+/* GAMBA DESTRA: dead hang rilassato -> attivazione hollow body -> inerzia al picco -> tenuta isometrica */
+@keyframes caliLegRightMotion {
+  0%   { d: path("M 126 154 L 128 184 L 129 214 L 133 216"); }
+  12%  { d: path("M 126 154 L 127.5 184.5 L 128.5 214.5 L 132 217"); }
+  26%  { d: path("M 126 154 L 126.5 184 L 125.5 214 L 128 218"); }
+  45%  { d: path("M 126 154 L 129 181 L 126 209 L 129 214"); }
+  66%  { d: path("M 126 154 L 128.5 182 L 125.5 210 L 128.5 215"); }
+  82%  { d: path("M 126 154 L 129.5 180 L 127 207 L 130.5 211"); }
+  92%  { d: path("M 126 154 L 127.5 183 L 126 211 L 129.5 214"); }
+  100% { d: path("M 126 154 L 127 184 L 125.5 212 L 129 215"); }
+}
+
+/* Testa: incassata nel dead hang -> emerge fiera nella depressione scapolare -> lockout luminoso */
+@keyframes caliHeadLockout {
+  0%   { transform: translateY(2px); stroke: #f2f2f0; }
+  12%  { transform: translateY(2.5px); stroke: #f2f2f0; }
+  26%  { transform: translateY(-1.5px); stroke: #f2f2f0; }
+  45%  { transform: translateY(-2px); stroke: #f5f6d0; }
+  66%  { transform: translateY(-2.5px); stroke: #e5eb67; filter: drop-shadow(0 0 6px rgba(217, 224, 76, 0.5)); }
+  82%  { transform: translateY(-3px); stroke: #d9e04c; filter: drop-shadow(0 0 12px #d9e04c); }
+  92%  { transform: translateY(-1.5px); stroke: #d9e04c; filter: drop-shadow(0 0 10px #d9e04c); }
+  100% { transform: translateY(-2px); stroke: #d9e04c; filter: drop-shadow(0 0 10px #d9e04c); }
+}
+
+@keyframes caliGuideReveal {
+  0%   { opacity: 0; transform: scale(0.82) rotate(-30deg); }
+  100% { opacity: 1; transform: scale(1) rotate(0deg); }
+}
+
+@keyframes caliNodePop {
+  0%   { transform: scale(0); opacity: 0; }
+  70%  { transform: scale(1.3); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes caliShockwave {
+  0%   { transform: scale(0.4); opacity: 0.95; }
+  100% { transform: scale(9); opacity: 0; }
+}
+
+@keyframes caliCharRise {
+  0%   { opacity: 0; transform: translateY(110%) scaleY(1.15); }
+  100% { opacity: 1; transform: translateY(0) scaleY(1); }
+}
+
+@keyframes caliSlash {
+  0%   { left: -100%; opacity: 0.95; }
+  100% { left: 130%; opacity: 0; }
+}
+
+@keyframes caliEtymReveal { to { opacity: 1; transform: translateY(0); } }
+
+@keyframes caliLineExpand { to { width: 32px; } }
+
+@keyframes caliGridBreath {
+  0%   { opacity: 0; transform: scale(1.08); }
+  50%  { opacity: 1; }
+  100% { opacity: 0.65; transform: scale(1); }
+}
+
+@keyframes caliGlowIn {
+  to { opacity: 1; transform: translate(-50%, -62%) scale(1); }
+}
+
+@keyframes caliHomeCascadeIn {
+  0%   { opacity: 0; transform: translateY(18px) scale(0.985); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* Riduzione movimento: logo già composto, nessuna coreografia */
+@media (prefers-reduced-motion: reduce) {
+  .cali-intro-overlay *,
+  .cali-intro-overlay *::before,
+  .cali-intro-overlay *::after {
+    animation-duration: 0.01ms !important;
+    animation-delay: 0s !important;
+  }
+  .cali-intro-overlay { transition-duration: 0.2s; }
+  .cali-shockwave, .cali-wordmark-slash { display: none; }
+  body.cali-intro-cascade #menu > * { animation: none; }
+}

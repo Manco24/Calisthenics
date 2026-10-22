@@ -2,12 +2,26 @@
 <html lang="it">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#14151a">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="CaliTracker">
   <title>CaliTracker</title>
-  <link rel="stylesheet" href="style.css?v=32">
+  <link rel="stylesheet" href="style.css?v=40">
+  <link rel="stylesheet" href="intro.css?v=40">
+  <link rel="preload" href="fonts/syne-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <script>
+    // Intro "Kalós · Sthénos": se già vista in questa sessione, nascondila prima del primo paint
+    (function () {
+      try {
+        var forceIntro = /[?&]intro=1(&|$)/.test(window.location.search);
+        if (!forceIntro && sessionStorage.getItem('calitrack_intro_seen_v1') === '1') {
+          document.documentElement.classList.add('cali-intro-seen');
+        }
+      } catch (e) {}
+    })();
+  </script>
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="icon-192.svg">
   <link rel="icon" type="image/svg+xml" href="icon-192.svg">
@@ -48,8 +62,126 @@
 </head>
 <body>
 
+<!-- INTRO ANIMATION OVERLAY: KALÓS · STHÉNOS (καλός = bello, σθένος = forza) -->
+<div id="cali-intro-overlay" class="cali-intro-overlay" role="presentation" aria-label="CaliTrack">
+  <div class="cali-intro-bg-grid"></div>
+  <div class="cali-intro-glow"></div>
+
+  <div class="cali-intro-stage">
+    <!-- LOGO SVG: ATLETA CALISTHENICS VITRUVIANO CHE ESEGUE UN PULL-UP ALLA SBARRA -->
+    <div class="cali-logo-wrap">
+      <svg class="cali-logo-svg" viewBox="0 0 240 240" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <defs>
+          <filter id="caliVoltGlow" x="-30%" y="-30%" width="160%" height="160%">
+            <feGaussianBlur stdDeviation="5" result="blur" />
+            <feComposite in="SourceGraphic" in2="blur" operator="over" />
+          </filter>
+          <linearGradient id="caliVoltGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#f5fb76" />
+            <stop offset="55%" stop-color="#d9e04c" />
+            <stop offset="100%" stop-color="#8d941e" />
+          </linearGradient>
+        </defs>
+
+        <!-- 1. Costruzione geometrica aurea (Kalós): Assi e cerchi guida -->
+        <path class="svg-guide-axis draw" pathLength="100" d="M18 120H222" />
+        <path class="svg-guide-axis draw" pathLength="100" d="M120 18V222" />
+        <circle class="svg-guide-ring" cx="120" cy="120" r="102" />
+
+        <!-- Cerchio di perfezione Kalós a 360° -->
+        <path class="svg-kalos-ring draw" pathLength="100" d="M204 120A84 84 0 1 1 36 120A84 84 0 1 1 204 120" />
+
+        <!-- Ticks geometrici aurei sui 4 quadranti -->
+        <line class="svg-quadrant-tick" x1="120" y1="26" x2="120" y2="36" />
+        <line class="svg-quadrant-tick" x1="120" y1="204" x2="120" y2="214" />
+        <line class="svg-quadrant-tick" x1="26" y1="120" x2="36" y2="120" />
+        <line class="svg-quadrant-tick" x1="204" y1="120" x2="214" y2="120" />
+
+        <!-- 2. Sbarra per trazioni calistenica (con flessione elastica) -->
+        <line class="svg-pullup-bar-support draw" pathLength="100" x1="42" y1="12" x2="42" y2="54" />
+        <line class="svg-pullup-bar-support draw" pathLength="100" x1="198" y1="12" x2="198" y2="54" />
+        <circle class="svg-pullup-bracket" cx="42" cy="14" r="3.5" />
+        <circle class="svg-pullup-bracket" cx="198" cy="14" r="3.5" />
+        <path class="svg-pullup-bar-main draw" pathLength="100" d="M 26 54 Q 120 54 214 54" />
+
+        <!-- 3. Mani agganciate alla sbarra (Grip Calisthenics) -->
+        <circle class="svg-pullup-grip" cx="88" cy="54" r="4.5" />
+        <circle class="svg-pullup-grip" cx="152" cy="54" r="4.5" />
+
+        <!-- 4. Braccia dell'atleta (cinematica inversa sincronizzata al 100% con le spalle) -->
+        <path class="svg-athlete-arm svg-arm-left" d="M 88 54 L 96 85.5 L 105 116" filter="url(#caliVoltGlow)" />
+        <path class="svg-athlete-arm svg-arm-right" d="M 152 54 L 144 85.5 L 135 116" filter="url(#caliVoltGlow)" />
+
+        <!-- Fulcri articolari sui gomiti che seguono l'articolazione -->
+        <circle class="svg-joint-node node-elbow-left" cx="70" cy="76" r="4.5" />
+        <circle class="svg-joint-node node-elbow-right" cx="170" cy="76" r="4.5" />
+
+        <!-- 5. CORPO DELL'ATLETA CON BIOMECCANICA FLUIDA E DUE GAMBE DISTINTE -->
+        <g class="svg-athlete-body">
+          <!-- Collo anatomico (visibile durante la depressione scapolare) -->
+          <line class="svg-athlete-neck" x1="120" y1="103" x2="120" y2="116" />
+
+          <!-- Spalle / Clavicola forte (si espande in retrazione scapolare) -->
+          <path class="svg-athlete-shoulders" d="M 105 116 L 135 116" />
+
+          <!-- Spina dorsale / Torso -->
+          <line class="svg-athlete-spine" x1="120" y1="116" x2="120" y2="154" />
+
+          <!-- Testa dell'atleta (depressione scapolare + superamento sbarra) -->
+          <circle class="svg-athlete-head" cx="120" cy="94" r="11" />
+
+          <!-- Bacino (raccordo alle anche) -->
+          <line class="svg-athlete-pelvis" x1="114" y1="154" x2="126" y2="154" />
+
+          <!-- GAMBA SINISTRA: anca -> ginocchio -> caviglia -> piede -->
+          <path class="svg-athlete-leg svg-leg-left" d="M 114 154 L 112 184 L 111 214 L 107 216" />
+
+          <!-- GAMBA DESTRA: anca -> ginocchio -> caviglia -> piede -->
+          <path class="svg-athlete-leg svg-leg-right" d="M 126 154 L 128 184 L 129 214 L 133 216" />
+
+          <!-- Fulcro energetico al petto al lockout -->
+          <circle class="svg-joint-node node-chest" cx="120" cy="116" r="5" />
+        </g>
+      </svg>
+      <div class="cali-shockwave"></div>
+    </div>
+
+    <!-- WORDMARK: CΛLITRΛCK -->
+    <div class="cali-wordmark-container">
+      <div class="cali-wordmark" aria-label="CaliTrack">
+        <span class="word-cali" aria-hidden="true"><span class="char" style="--i:0">C</span><span class="char char-lambda" style="--i:1">Λ</span><span class="char" style="--i:2">L</span><span class="char" style="--i:3">I</span></span><span class="word-track" aria-hidden="true"><span class="char" style="--i:4">T</span><span class="char" style="--i:5">R</span><span class="char char-lambda" style="--i:6">Λ</span><span class="char" style="--i:7">C</span><span class="char" style="--i:8">K</span></span>
+        <span class="cali-wordmark-slash"></span>
+      </div>
+
+      <!-- SIGILLO ETIMOLOGICO -->
+      <div class="cali-etymology">
+        <div class="etym-row">
+          <span class="etym-line"></span>
+          <span class="etym-greek">ΚΑΛΟΣ<i class="etym-dot" aria-hidden="true"></i>ΣΘΕΝΟΣ</span>
+          <span class="etym-line"></span>
+        </div>
+        <div class="etym-meaning"><b>BELLO</b> E <b>FORTE</b></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="cali-intro-skip-hint">TOCCA PER ENTRARE</div>
+</div>
+<script src="intro.js?v=37"></script>
+
 <div class="screen active" id="menu">
-  <h1 class="app-title">Tracker allenamenti</h1>
+  <header class="app-brand-header">
+    <div class="brand-badge-pill" role="button" tabindex="0" title="Tocca per riprodurre l'animazione Kalós · Sthénos" onclick="if (typeof window.returnHomeWithIntro === 'function') window.returnHomeWithIntro();">
+      <span class="brand-monogram">CΛ</span>
+      <span class="brand-wordmark">CΛLITRΛCK</span>
+      <span class="brand-greek-chip">ΚΑΛΟΣ · ΣΘΕΝΟΣ</span>
+    </div>
+    <div class="brand-titles">
+      <h1 class="app-title" id="appTitle" role="button" tabindex="0" title="Tocca per tornare alla Home con l'animazione" onclick="if (typeof window.returnHomeWithIntro === 'function') window.returnHomeWithIntro();">Tracker Allenamenti</h1>
+      <p class="app-subtitle">Costanza · Metodo · Progressione</p>
+    </div>
+  </header>
+
   <section class="calendar-card" aria-label="Calendario mensile">
     <div class="calendar-toolbar">
       <button class="calendar-nav-btn" id="previousMonth" type="button" aria-label="Mese precedente">‹</button>
@@ -99,25 +231,49 @@
         </div>
       </div>
     </details>
-    <div class="data-actions">
-      <button type="button" id="exportDataButton">⬇ Esporta backup</button>
-      <button type="button" id="importDataButton">⬆ Importa backup</button>
-      <input type="file" id="importDataInput" accept=".json,application/json" hidden>
-      <button type="button" id="forceRefreshAppBtn" class="force-refresh-btn" onclick="forceAppPurgeAndReload()" title="Scarica subito l'ultima versione e cancella cache vecchia">🔄 Aggiorna app</button>
-    </div>
   </section>
+
+  <!-- STRUMENTI DATI E BACKUP (SEPARATI DAL CALENDARIO PER RESPIRO E ERGONOMIA) -->
+  <div class="data-actions" aria-label="Strumenti dati">
+    <button type="button" id="exportDataButton" class="utility-pill-btn" title="Salva una copia di backup delle tue sessioni">
+      <span class="btn-icon">⬇</span>
+      <span class="btn-text">Backup</span>
+    </button>
+    <button type="button" id="importDataButton" class="utility-pill-btn" title="Ripristina sessioni da un backup precedente">
+      <span class="btn-icon">⬆</span>
+      <span class="btn-text">Ripristina</span>
+    </button>
+    <input type="file" id="importDataInput" accept=".json,application/json" hidden>
+    <button type="button" id="forceRefreshAppBtn" class="utility-pill-btn force-refresh-btn" onclick="forceAppPurgeAndReload()" title="Scarica subito l'ultima versione e cancella cache vecchia">
+      <span class="btn-icon">🔄</span>
+      <span class="btn-text">Aggiorna</span>
+    </button>
+  </div>
+
   <section class="workout-type-selector home-app-selector" aria-label="Scegli applicativo">
-    <p class="selector-intro">Scegli cosa vuoi fare</p>
+    <div class="section-title-wrap">
+      <p class="selector-intro">Scegli cosa vuoi fare</p>
+    </div>
     <div class="workout-type-buttons">
       <button class="workout-type-btn route-push" type="button" onclick="showScreen('sub-programma')">
-        <span class="type-icon icon-push">A</span>
-        <span class="type-label">Allenamenti</span>
-        <span class="type-description">Apri le schede e registra i progressi</span>
+        <div class="type-icon-wrap">
+          <span class="type-icon icon-push">A</span>
+        </div>
+        <div class="type-content">
+          <span class="type-label">Allenamenti</span>
+          <span class="type-description">Apri le schede e registra i progressi</span>
+        </div>
+        <span class="type-chevron" aria-hidden="true">›</span>
       </button>
       <button class="workout-type-btn route-pull" type="button" onclick="openEditorHome()">
-        <span class="type-icon icon-pull">+</span>
-        <span class="type-label">Editor schede</span>
-        <span class="type-description">Crea, importa e modifica schede</span>
+        <div class="type-icon-wrap">
+          <span class="type-icon icon-pull">+</span>
+        </div>
+        <div class="type-content">
+          <span class="type-label">Editor schede</span>
+          <span class="type-description">Crea, importa e modifica schede</span>
+        </div>
+        <span class="type-chevron" aria-hidden="true">›</span>
       </button>
     </div>
   </section>
@@ -142,22 +298,39 @@
     <h2>Scegli la scheda</h2>
   </div>
   <div class="workout-type-selector" aria-label="Tipo di scheda">
-    <p class="selector-intro">Scegli il tipo di allenamento</p>
+    <div class="section-title-wrap">
+      <p class="selector-intro">Scegli il tipo di allenamento</p>
+    </div>
     <div class="workout-type-buttons">
-      <button class="workout-type-btn route-push" onclick="showScreen('sub-spinta')">
-        <span class="type-icon icon-push">S</span>
-        <span class="type-label">Spinta</span>
-        <span class="type-description">Schede di spinta</span>
+      <button class="workout-type-btn route-push" type="button" onclick="showScreen('sub-spinta')">
+        <div class="type-icon-wrap">
+          <span class="type-icon icon-push">S</span>
+        </div>
+        <div class="type-content">
+          <span class="type-label">Spinta</span>
+          <span class="type-description">Petto, spalle e tricipiti (Varianti A & B)</span>
+        </div>
+        <span class="type-chevron" aria-hidden="true">›</span>
       </button>
-      <button class="workout-type-btn route-pull" onclick="showScreen('sub-tirata')">
-        <span class="type-icon icon-pull">T</span>
-        <span class="type-label">Tirata</span>
-        <span class="type-description">Schede di tirata</span>
+      <button class="workout-type-btn route-pull" type="button" onclick="showScreen('sub-tirata')">
+        <div class="type-icon-wrap">
+          <span class="type-icon icon-pull">T</span>
+        </div>
+        <div class="type-content">
+          <span class="type-label">Tirata</span>
+          <span class="type-description">Dorso, bicipiti e trazioni (4 Varianti)</span>
+        </div>
+        <span class="type-chevron" aria-hidden="true">›</span>
       </button>
-      <button class="workout-type-btn route-custom" onclick="showScreen('sub-mie-schede')">
-        <span class="type-icon icon-custom">★</span>
-        <span class="type-label">Le mie schede</span>
-        <span class="type-description">Schede create e salvate</span>
+      <button class="workout-type-btn route-custom" type="button" onclick="showScreen('sub-mie-schede')">
+        <div class="type-icon-wrap">
+          <span class="type-icon icon-custom">★</span>
+        </div>
+        <div class="type-content">
+          <span class="type-label">Le mie schede</span>
+          <span class="type-description">Schede personalizzate e importate</span>
+        </div>
+        <span class="type-chevron" aria-hidden="true">›</span>
       </button>
     </div>
   </div>
@@ -272,7 +445,7 @@
         </div>
       </div>
       <div class="ex-note"><b>Note:</b> useremo un rialzo sotto la testa per ridurre il ROM e rendere fattibile l'esercizio: ogni volta che le serie saranno completate con successo andiamo a ridurre il dislivello, sino appunto ad arrivare ad eseguire l'esercizio senza rialzo sotto la testa. Gli altri esercizi sono per aumentare il volume fatto, che altrimenti sarebbe troppo esiguo.</div>
-      <div class="ex-meta"><span>Riposo serie: <b>2' 30&quot;</b></span><span>Riposo fine esercizio: <b>3' 30&quot;</b></span></div>
+      <div class="ex-meta"><span>Riposo serie: <b>2' 30&quot;</b></span><span>Riposo fine esercizio: <b>2' 30&quot;</b></span></div>
     </div>
     <div class="exercise">
       <div class="ex-head">
@@ -282,7 +455,7 @@
           <span class="badge">5 x 5</span>
         </div>
       </div>
-      <div class="ex-meta"><span>Riposo serie: <b>2' 30&quot;</b></span><span>Riposo fine esercizio: <b>3' 30&quot;</b></span></div>
+      <div class="ex-meta"><span>Riposo serie: <b>2' 30&quot;</b></span><span>Riposo fine esercizio: <b>2' 30&quot;</b></span></div>
     </div>
     <div class="exercise" data-exercise-id="dip-incremento" data-dip-increment="1" data-ladder-rest-per-rep="30" data-ladder-rest-max="90">
       <div class="ex-head">
@@ -303,7 +476,7 @@
           <span class="badge">1 x Max</span>
         </div>
       </div>
-      <div class="ex-meta"><span></span><span>Riposo fine esercizio: <b>3' 00&quot;</b></span></div>
+      <div class="ex-meta"><span></span><span>Riposo fine esercizio: <b>2' 30&quot;</b></span></div>
     </div>
     <div class="exercise">
       <div class="ex-head">
@@ -355,7 +528,7 @@
           <span class="badge">1 x Max</span>
         </div>
       </div>
-      <div class="ex-meta"><span></span><span>Riposo fine esercizio: <b>3' 00&quot;</b></span></div>
+      <div class="ex-meta"><span></span><span>Riposo fine esercizio: <b>2' 30&quot;</b></span></div>
     </div>
     <div class="exercise">
       <div class="ex-head">
@@ -365,7 +538,7 @@
           <span class="badge">4 X (12-16-20-16-12)</span>
         </div>
       </div>
-      <div class="ex-meta"><span>Riposo tra serie: <b>20&quot;</b></span><span>Riposo fine esercizio: <b>120&quot;</b></span></div>
+      <div class="ex-meta"><span>Riposo tra serie: <b>20&quot;</b></span><span>Riposo fine esercizio: <b>2' 30&quot;</b></span></div>
     </div>
     <div class="exercise">
       <div class="ex-head">
@@ -553,9 +726,9 @@
   <img id="modalImg" src="" alt="Scheda ingrandita">
 </div>
 
-<script src="workout-editor/workout-validation.js?v=32"></script>
-<script src="workout-editor/workout-storage.js?v=32"></script>
-<script src="script.js?v=32"></script>
-<script src="calendar-home.js?v=32"></script>
+<script src="workout-editor/workout-validation.js?v=35"></script>
+<script src="workout-editor/workout-storage.js?v=35"></script>
+<script src="script.js?v=35"></script>
+<script src="calendar-home.js?v=35"></script>
 </body>
 </html>

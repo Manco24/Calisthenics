@@ -1,8 +1,14 @@
-const CACHE_NAME = 'schede-v32-network-first';
+const CACHE_NAME = 'schede-v40-network-first';
 const CORE_APP_FILES = [
   './',
   './index.html',
   './style.css',
+  './intro.css',
+  './intro.js',
+  './fonts/syne-latin.woff2',
+  './fonts/syne-greek.woff2',
+  './fonts/gfsdidot-greek.woff2',
+  './fonts/cinzel-700-latin.woff2',
   './script.js',
   './calendar-home.js',
   './manifest.json',
@@ -11,6 +17,9 @@ const CORE_APP_FILES = [
   './workout-editor/index.html',
   './workout-editor/styles.css',
   './workout-editor/app.js',
+  './workout-editor/ocr-preprocessor.js',
+  './workout-editor/calisthenics-lexicon.js',
+  './workout-editor/vision-ai-adapter.js',
   './workout-editor/workout-storage.js',
   './workout-editor/workout-parser.js',
   './workout-editor/workout-validation.js',
@@ -34,7 +43,7 @@ self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then(async cache => {
-        await cache.addAll(CORE_APP_FILES.map(url => new Request(url, { cache: 'reload' })));
+        await Promise.allSettled(CORE_APP_FILES.map(url => cache.add(new Request(url, { cache: 'reload' })).catch(() => {})));
         await Promise.allSettled(OPTIONAL_VENDOR_FILES.map(url => cache.add(url)));
       })
       .then(() => self.skipWaiting())

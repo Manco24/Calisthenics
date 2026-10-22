@@ -1848,21 +1848,39 @@ function resetWorkoutScreen(screen) {
   const activeDate = getActiveTrainingDateKey();
   const overlay = globalTimerOverlay;
 
-  // 1. Rimuovi tutte le chiavi correlate da localStorage (sia per la data attiva sia residui generici)
+  // 0. Interrompi eventuali timer attivi in esecuzione
+  if (typeof stopTimer === 'function') {
+    stopTimer();
+  }
+
+  // 1. Raccogli tutti gli identificatori degli esercizi di questa schermata (inclusi explicit ID, numeri e alias ladder)
+  const allExIds = new Set();
+  if (sheetId) allExIds.add(sheetId);
+  screen.querySelectorAll('.exercise').forEach(exercise => {
+    const exId = getExerciseId(exercise, sheetId);
+    if (exId) allExIds.add(exId);
+    if (exercise.dataset.exerciseId) allExIds.add(exercise.dataset.exerciseId);
+    const num = exercise.querySelector('.ex-num')?.textContent.trim();
+    if (num && sheetId) allExIds.add(`${sheetId}-${num}`);
+  });
+  if (sheetId === 'tirata-1') allExIds.add('trazioni-ladder');
+  if (sheetId === 'spinta-1') allExIds.add('dip-incremento');
+
+  // Rimuovi da localStorage tutte le chiavi relative a questi esercizi / scheda per la data attiva o chiavi senza data (legacy)
   try {
+    const idList = Array.from(allExIds);
     const keysToRemove = [];
     for (let i = 0; i < localStorage.length; i++) {
       const k = localStorage.key(i);
       if (!k) continue;
-      if (
-        k.startsWith(`calisthenics_sets_${activeDate}_${sheetId}`) ||
-        k.startsWith(`calisthenics_max_${activeDate}_${sheetId}`) ||
-        k.startsWith(`calisthenics_totalreps_${activeDate}_${sheetId}`) ||
-        k.startsWith(`calisthenics_sets_${sheetId}`) ||
-        k.startsWith(`calisthenics_max_${sheetId}`) ||
-        k.startsWith(`calisthenics_totalreps_${sheetId}`)
-      ) {
-        keysToRemove.push(k);
+      if (k.startsWith('calisthenics_')) {
+        const matchesTarget = idList.some(id => k.includes(id));
+        if (matchesTarget) {
+          // Se la chiave è specifica della data attiva O è una vecchia chiave senza data YYYY-MM-DD
+          if (k.includes(activeDate) || !k.match(/\d{4}-\d{2}-\d{2}/)) {
+            keysToRemove.push(k);
+          }
+        }
       }
     }
     keysToRemove.forEach(k => localStorage.removeItem(k));
@@ -1870,8 +1888,51 @@ function resetWorkoutScreen(screen) {
     console.warn('Errore pulizia localStorage per reset:', e);
   }
 
-  // 2. Resetta tutti gli esercizi nel DOM
+  // 2. Resetta tutti gli esercizi nel DOM e pulisci puntualmente le chiavi per ciascun esercizio
   screen.querySelectorAll('.exercise').forEach(exercise => {
+    const exId = getExerciseId(exercise, sheetId);
+
+    // Pulizia mirata e profonda delle chiavi di storage per questo esercizio
+    const directKeys = [
+      getDipProgressKey(exercise),
+      getDipProgressKey(exercise, activeDate),
+      getTotalRepsStorageKey(exercise, sheetId),
+      getTotalRepsStorageKey(exercise, sheetId, activeDate),
+      getMaxStorageKey(exercise, sheetId),
+      getMaxStorageKey(exercise, sheetId, activeDate),
+      getStorageKey(exercise, sheetId),
+      getStorageKey(exercise, sheetId, activeDate),
+      `calisthenics_sets_${activeDate}_${exId}_dip_progress_v2`,
+      `calisthenics_sets_${activeDate}_${exId}_dip_progress`,
+      `calisthenics_sets_${exId}_dip_progress_v2`,
+      `calisthenics_sets_${exId}_dip_progress`,
+      `calisthenics_sets_${activeDate}_${exId}`,
+      `calisthenics_sets_${exId}`,
+      `calisthenics_totalreps_${activeDate}_${exId}`,
+      `calisthenics_totalreps_${exId}`,
+      `calisthenics_max_${activeDate}_${exId}`,
+      `calisthenics_max_${exId}`
+    ];
+    if (exId === 'trazioni-ladder' || sheetId === 'tirata-1') {
+      directKeys.push(
+        `calisthenics_sets_${activeDate}_trazioni-ladder_dip_progress_v2`,
+        `calisthenics_sets_trazioni-ladder_dip_progress_v2`,
+        `calisthenics_sets_${activeDate}_trazioni-ladder`,
+        `calisthenics_sets_trazioni-ladder`
+      );
+    }
+    if (exId === 'dip-incremento' || sheetId === 'spinta-1') {
+      directKeys.push(
+        `calisthenics_sets_${activeDate}_dip-incremento_dip_progress_v2`,
+        `calisthenics_sets_dip-incremento_dip_progress_v2`,
+        `calisthenics_sets_${activeDate}_dip-incremento`,
+        `calisthenics_sets_dip-incremento`
+      );
+    }
+    directKeys.forEach(k => {
+      if (k) localStorage.removeItem(k);
+    });
+
     // A. Ladder
     if (isIncrementExercise(exercise)) {
       exercise.classList.remove('exercise-done');
@@ -1884,6 +1945,7 @@ function resetWorkoutScreen(screen) {
     // B. Reps Totali
     if (isTotalRepsExercise(exercise)) {
       exercise.classList.remove('exercise-done');
+      saveTotalRepsProgress(exercise, 0);
       const widget = exercise.querySelector('.ex-totalreps-widget');
       if (widget) widget.remove();
       setupTotalRepsWidget(exercise);
@@ -1903,6 +1965,7 @@ function resetWorkoutScreen(screen) {
       progress.dataset.completed = '0';
       progress.textContent = `0/${total}`;
       progress.classList.remove('completed');
+      progress.setAttribute('aria-label', `Serie completate: 0 di ${total}`);
     }
     exercise.classList.remove('exercise-done');
     saveSetProgress(exercise, 0);
@@ -1959,7 +2022,7 @@ function createResetButton(screen, overlay) {
   const existing = screen.querySelector('.reset-workout-btn');
   if (existing) existing.remove();
 
-  const exercises = screen.querySelectorAll('.exercise .set-progress, .dip-increment-widget, .ex-totalreps-widget');
+  const exercises = screen.querySelectorAll('.exercise');
   if (exercises.length === 0) return;
 
   const btn = document.createElement('button');
@@ -1967,34 +2030,15 @@ function createResetButton(screen, overlay) {
   btn.className = 'reset-workout-btn';
   btn.innerHTML = '↺ Reset allenamento';
 
-  let confirmTimeout = null;
-
   btn.addEventListener('click', (e) => {
     e.stopPropagation();
 
-    // Se non è ancora in stato di conferma, chiedi conferma in-line sul pulsante (immune a blocchi popup mobile)
-    if (!btn.classList.contains('confirming')) {
-      btn.classList.add('confirming');
-      btn.innerHTML = '⚠️ Tocca di nuovo per confermare il reset';
-      if ('vibrate' in navigator) navigator.vibrate(15);
-
-      clearTimeout(confirmTimeout);
-      confirmTimeout = setTimeout(() => {
-        btn.classList.remove('confirming');
-        btn.innerHTML = '↺ Reset allenamento';
-      }, 4000);
-      return;
-    }
-
-    // Secondo tocco entro 4 secondi: esegui il reset
-    clearTimeout(confirmTimeout);
-    btn.classList.remove('confirming');
-    btn.innerHTML = '↺ Reset allenamento';
-
+    // 1-Tap reset immediato: azzera tutto istantaneamente
     resetWorkoutScreen(screen);
 
-    if ('vibrate' in navigator) navigator.vibrate([30, 50, 30]);
-    showToast('↺ Scheda resettata: contatori azzerati a 0!');
+    // Feedback aptico e visivo immediato
+    if ('vibrate' in navigator) navigator.vibrate([40, 60]);
+    showToast('↺ Scheda azzerata: pronta per iniziare!');
   });
 
   const sessionPanel = screen.querySelector('.athlete-session-panel');
