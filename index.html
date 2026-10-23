@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#14151a">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="CaliTracker">
+  <title>CaliTracker</title>
+  <link rel="stylesheet" href="style.css?v=42">
+  <link rel="stylesheet" href="intro.css?v=42">
+  <link rel="preload" href="fonts/syne-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <script>
+    // Intro "Kalós · Sthénos": se già vista in questa sessione, nascondila prima del primo paint
+    (function () {
+      try {
+        var forceIntro = /[?&]intro=1(&|$)/.test(window.location.search);
+        if (!forceIntro && sessionStorage.getItem('calitrack_intro_seen_v1') === '1') {
+          document.documentElement.classList.add('cali-intro-seen');
+        }
+      } catch (e) {}
+    })();
+  </script>
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icon-192.svg">
+  <link rel="icon" type="image/svg+xml" href="icon-192.svg">
+  <script>
+    if ('serviceWorker' in navigator && ['http:', 'https:'].includes(window.location.protocol)) {
+      navigator.serviceWorker.register('./sw.js', { updateViaCache: 'none' })
+        .then(reg => { reg.update().catch(() => {}); })
+        .catch(error => console.error('Registrazione service worker fallita:', error));
+      // Quando una nuova versione prende il controllo, ricarica una sola volta per usare subito i file aggiornati
+      let swReloaded = false;
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (swReloaded) return;
+        swReloaded = true;
+        window.location.reload();
+      });
+    }
+
+    async function forceAppPurgeAndReload() {
+      if ('serviceWorker' in navigator) {
+        try {
+          const registrations = await navigator.serviceWorker.getRegistrations();
+          for (const reg of registrations) {
+            await reg.unregister();
+          }
+        } catch (e) {}
+      }
+      if ('caches' in window) {
+        try {
+          const keys = await caches.keys();
+          for (const k of keys) {
+            await caches.delete(k);
+          }
+        } catch (e) {}
+      }
+      window.location.href = window.location.pathname + '?reload=' + Date.now();
+    }
+  </script>
+</head>
+<body>
+
+<!-- INTRO ANIMATION OVERLAY: KALÓS · STHÉNOS (καλός = bello, σθένος = forza) -->
+<div id="cali-intro-overlay" class="cali-intro-overlay" role="presentation" aria-label="CaliTrack">
+  <div class="cali-intro-bg-grid"></div>
+  <div class="cali-intro-glow"></div>
+
+  <div class="cali-intro-stage">
+    <!-- LOGO SVG: ATLETA CALISTHENICS VITRUVIANO CHE ESEGUE UN PULL-UP ALLA SBARRA -->
+    <div class="cali-logo-wrap">
+      <svg class="cali-logo-svg" viewBox="0 0 240 240" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <defs>
+          <filter id="caliVoltGlow" x="-30%" y="-30%" width="160%" height="160%">
+            <feGaussianBlur stdDeviation="5" result="blur" />
+            <feComposite in="SourceGraphic" in2="blur" operator="over" />
+          </filter>
+          <linearGradient id="caliVoltGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#f5fb76" />
+            <stop offset="55%" stop-color="#d9e04c" />
+            <stop offset="100%" stop-color="#8d941e" />
+          </linearGradient>
+        </defs>
+
+        <!-- 1. Costruzione geometrica aurea (Kalós): Assi e cerchi guida -->
+        <path class="svg-guide-axis draw" pathLength="100" d="M18 120H222" />
+        <path class="svg-guide-axis draw" pathLength="100" d="M120 18V222" />
+        <circle class="svg-guide-ring" cx="120" cy="120" r="102" />
+
+        <!-- Cerchio di perfezione Kalós a 360° -->
+        <path class="svg-kalos-ring draw" pathLength="100" d="M204 120A84 84 0 1 1 36 120A84 84 0 1 1 204 120" />
+
+        <!-- Ticks geometrici aurei sui 4 quadranti -->
+        <line class="svg-quadrant-tick" x1="120" y1="26" x2="120" y2="36" />
+        <line class="svg-quadrant-tick" x1="120" y1="204" x2="120" y2="214" />
+        <line class="svg-quadrant-tick" x1="26" y1="120" x2="36" y2="120" />
+        <line class="svg-quadrant-tick" x1="204" y1="120" x2="214" y2="120" />
+
+        <!-- 2. Sbarra per trazioni calistenica (con flessione elastica) -->
+        <line class="svg-pullup-bar-support draw" pathLength="100" x1="42" y1="12" x2="42" y2="54" />
+        <line class="svg-pullup-bar-support draw" pathLength="100" x1="198" y1="12" x2="198" y2="54" />
+        <circle class="svg-pullup-bracket" cx="42" cy="14" r="3.5" />
+        <circle class="svg-pullup-bracket" cx="198" cy="14" r="3.5" />
+        <path class="svg-pullup-bar-main draw" pathLength="100" d="M 26 54 Q 120 54 214 54" />
+
+        <!-- 3. Mani agganciate alla sbarra (Grip Calisthenics) -->
+        <circle class="svg-pullup-grip" cx="88" cy="54" r="4.5" />
+        <circle class="svg-pullup-grip" cx="152" cy="54" r="4.5" />
+
+        <!-- 4. Braccia dell'atleta (cinematica inversa sincronizzata al 100% con le spalle) -->
+        <path class="svg-athlete-arm svg-arm-left" d="M 88 54 L 96 85.5 L 105 116" filter="url(#caliVoltGlow)" />
+        <path class="svg-athlete-arm svg-arm-right" d="M 152 54 L 144 85.5 L 135 116" filter="url(#caliVoltGlow)" />
+
+        <!-- Fulcri articolari sui gomiti che seguono l'articolazione -->
+        <circle class="svg-joint-node node-elbow-left" cx="70" cy="76" r="4.5" />
+        <circle class="svg-joint-node node-elbow-right" cx="170" cy="76" r="4.5" />
+
+        <!-- 5. CORPO DELL'ATLETA CON BIOMECCANICA FLUIDA E DUE GAMBE DISTINTE -->
+        <g class="svg-athlete-body">
+          <!-- Collo anatomico (visibile durante la depressione scapolare) -->
+          <line class="svg-athlete-neck" x1="120" y1="103" x2="120" y2="116" />
+
+          <!-- Spalle / Clavicola forte (si espande in retrazione scapolare) -->
+          <path class="svg-athlete-shoulders" d="M 105 116 L 135 116" />
+
+          <!-- Spina dorsale / Torso -->
+          <line class="svg-athlete-spine" x1="120" y1="116" x2="120" y2="154" />
+
+          <!-- Testa dell'atleta (depressione scapolare + superamento sbarra) -->
+          <circle class="svg-athlete-head" cx="120" cy="94" r="11" />
+
+          <!-- Bacino (raccordo alle anche) -->
+          <line class="svg-athlete-pelvis" x1="114" y1="154" x2="126" y2="154" />
+
+          <!-- GAMBA SINISTRA: anca -> ginocchio -> caviglia -> piede -->
+          <path class="svg-athlete-leg svg-leg-left" d="M 114 154 L 112 184 L 111 214 L 107 216" />
+
+          <!-- GAMBA DESTRA: anca -> ginocchio -> caviglia -> piede -->
+          <path class="svg-athlete-leg svg-leg-right" d="M 126 154 L 128 184 L 129 214 L 133 216" />
+
+          <!-- Fulcro energetico al petto al lockout -->
+          <circle class="svg-joint-node node-chest" cx="120" cy="116" r="5" />
+        </g>
+      </svg>
+      <div class="cali-shockwave"></div>
+    </div>
+
+    <!-- WORDMARK: CΛLITRΛCK -->
+    <div class="cali-wordmark-container">
+      <div class="cali-wordmark" aria-label="CaliTrack">
+        <span class="word-cali" aria-hidden="true"><span class="char" style="--i:0">C</span><span class="char char-lambda" style="--i:1">Λ</span><span class="char" style="--i:2">L</span><span class="char" style="--i:3">I</span></span><span class="word-track" aria-hidden="true"><span class="char" style="--i:4">T</span><span class="char" style="--i:5">R</span><span class="char char-lambda" style="--i:6">Λ</span><span class="char" style="--i:7">C</span><span class="char" style="--i:8">K</span></span>
+        <span class="cali-wordmark-slash"></span>
+      </div>
+
+      <!-- SIGILLO ETIMOLOGICO -->
+      <div class="cali-etymology">
+        <div class="etym-row">
+          <span class="etym-line"></span>
+          <span class="etym-greek">ΚΑΛΟΣ<i class="etym-dot" aria-hidden="true"></i>ΣΘΕΝΟΣ</span>
+          <span class="etym-line"></span>
+        </div>
+        <div class="etym-meaning"><b>BELLO</b> E <b>FORTE</b></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="cali-intro-skip-hint">TOCCA PER ENTRARE</div>
+</div>
+<script src="intro.js?v=37"></script>
+
+<div class="screen active" id="menu">
+  <header class="app-brand-header">
+    <div class="brand-badge-pill" role="button" tabindex="0" title="Tocca per riprodurre l'animazione Kalós · Sthénos" onclick="if (typeof window.returnHomeWithIntro === 'function') window.returnHomeWithIntro();">
+      <span class="brand-monogram">CΛ</span>
+      <span class="brand-wordmark">CΛLITRΛCK</span>
+      <span class="brand-greek-chip">ΚΑΛΟΣ · ΣΘΕΝΟΣ</span>
+    </div>
+    <div class="brand-titles">
+      <h1 class="app-title" id="appTitle" role="button" tabindex="0" title="Tocca per tornare alla Home con l'animazione" onclick="if (typeof window.returnHomeWithIntro === 'function') window.returnHomeWithIntro();">Tracker Allenamenti</h1>
+      <p class="app-subtitle">Costanza · Metodo · Progressione</p>
+    </div>
+  </header>
+
+  <section class="calendar-card" aria-label="Calendario mensile">
+    <div class="calendar-toolbar">
+      <button class="calendar-nav-btn" id="previousMonth" type="button" aria-label="Mese precedente">‹</button>
+      <h2 id="calendarTitle"></h2>
+      <button class="calendar-nav-btn" id="nextMonth" type="button" aria-label="Mese successivo">›</button>
+    </div>
+    <div class="calendar-weekdays" aria-hidden="true">
+      <span>L</span><span>M</span><span>M</span><span>G</span><span>V</span><span>S</span><span>D</span>
+    </div>
+    <div class="calendar-grid" id="calendarGrid"></div>
+    <div class="calendar-legend">
+      <span><i class="legend-dot push"></i> Spinta</span>
+      <span><i class="legend-dot pull"></i> Tirata</span>
+      <span><i class="legend-dot custom"></i> Ad hoc</span>
+    </div>
+
+    <!-- SEZIONE STATISTICHE & RECORD PERSONALI -->
+    <details class="stats-dashboard-collapsible" id="statsDashboardToggle">
+      <summary class="stats-collapsible-summary">
+        <span>📊 Statistiche & Record Personali</span>
+        <span class="chevron">▼</span>
+      </summary>
+      <div class="stats-dashboard">
+        <div class="stats-cards" id="statsCards"></div>
+        
+        <div class="chart-card">
+          <div class="chart-title-row">
+            <h3>Settimana corrente</h3>
+            <span id="streakValue">0 giorni di fila</span>
+          </div>
+          <div class="stats-chart" id="weeklyChart"></div>
+        </div>
+
+        <div class="chart-card">
+          <div class="chart-title-row">
+            <h3>Attività mensile</h3>
+            <span id="monthlyTotal">0 sessioni</span>
+          </div>
+          <div class="stats-chart" id="monthlyChart"></div>
+        </div>
+
+        <div class="records-card">
+          <div class="chart-title-row">
+            <h3>🏆 Record Personali (PR)</h3>
+          </div>
+          <div class="records-list" id="recordsList"></div>
+        </div>
+      </div>
+    </details>
+  </section>
+
+  <!-- STRUMENTI DATI E BACKUP (SEPARATI DAL CALENDARIO PER RESPIRO E ERGONOMIA) -->
+  <div class="data-actions" aria-label="Strumenti dati">
+    <button type="button" id="exportDataButton" class="utility-pill-btn" title="Salva una copia di backup delle tue sessioni">
+      <span class="btn-icon">⬇</span>
+      <span class="btn-text">Backup</span>
+    </button>
+    <button type="button" id="importDataButton" class="utility-pill-btn" title="Ripristina sessioni da un backup precedente">
+      <span class="btn-icon">⬆</span>
+      <span class="btn-text">Ripristina</span>
+    </button>
+    <input type="file" id="importDataInput" accept=".json,application/json" hidden>
+    <button type="button" id="forceRefreshAppBtn" class="utility-pill-btn force-refresh-btn" onclick="forceAppPurgeAndReload()" title="Scarica subito l'ultima versione e cancella cache vecchia">
+      <span class="btn-icon">🔄</span>
+      <span class="btn-text">Aggiorna</span>
+    </button>
+  </div>
+
+  <section class="workout-type-selector home-app-selector" aria-label="Scegli applicativo">
+    <div class="section-title-wrap">
+      <p class="selector-intro">Scegli cosa vuoi fare</p>
+    </div>
+    <div class="workout-type-buttons">
+      <button class="workout-type-btn route-push" type="button" onclick="showScreen('sub-programma')">
+        <div class="type-icon-wrap">
+          <span class="type-icon icon-push">A</span>
+        </div>
+        <div class="type-content">
+          <span class="type-label">Allenamenti</span>
+          <span class="type-description">Apri le schede e registra i progressi</span>
+        </div>
+        <span class="type-chevron" aria-hidden="true">›</span>
+      </button>
+      <button class="workout-type-btn route-pull" type="button" onclick="openEditorHome()">
+        <div class="type-icon-wrap">
+          <span class="type-icon icon-pull">+</span>
+        </div>
+        <div class="type-content">
+          <span class="type-label">Editor schede</span>
+          <span class="type-description">Crea, importa e modifica schede</span>
+        </div>
+        <span class="type-chevron" aria-hidden="true">›</span>
+      </button>
+    </div>
+  </section>
+</div>
+
+<div class="screen integrated-editor-screen" id="workout-editor">
+  <iframe data-src="./workout-editor/index.html" title="Editor delle schede di allenamento"></iframe>
+</div>
+
+<div class="day-modal" id="dayModal" aria-hidden="true">
+  <div class="day-modal-panel" role="dialog" aria-modal="true" aria-labelledby="dayModalTitle">
+    <button class="day-modal-close" id="closeDayModal" type="button" aria-label="Chiudi">×</button>
+    <h2 id="dayModalTitle"></h2>
+    <div id="dayModalContent"></div>
+  </div>
+</div>
+
+<!-- LIVELLO 2a: MENU PROGRAMMA -->
+<div class="screen" id="sub-programma">
+  <div class="top-bar">
+    <button class="back-btn" onclick="showScreen('menu')">‹</button>
+    <h2>Scegli la scheda</h2>
+  </div>
+  <div class="workout-type-selector" aria-label="Tipo di scheda">
+    <div class="section-title-wrap">
+      <p class="selector-intro">Scegli il tipo di allenamento</p>
+    </div>
+    <div class="workout-type-buttons">
+      <button class="workout-type-btn route-push" type="button" onclick="showScreen('sub-spinta')">
+        <div class="type-icon-wrap">
+          <span class="type-icon icon-push">S</span>
+        </div>
+        <div class="type-content">
+          <span class="type-label">Spinta</span>
+          <span class="type-description">Petto, spalle e tricipiti (Varianti A & B)</span>
+        </div>
+        <span class="type-chevron" aria-hidden="true">›</span>
+      </button>
+      <button class="workout-type-btn route-pull" type="button" onclick="showScreen('sub-tirata')">
+        <div class="type-icon-wrap">
+          <span class="type-icon icon-pull">T</span>
+        </div>
+        <div class="type-content">
+          <span class="type-label">Tirata</span>
+          <span class="type-description">Dorso, bicipiti e trazioni (4 Varianti)</span>
+        </div>
+        <span class="type-chevron" aria-hidden="true">›</span>
+      </button>
+      <button class="workout-type-btn route-custom" type="button" onclick="showScreen('sub-mie-schede')">
+        <div class="type-icon-wrap">
+          <span class="type-icon icon-custom">★</span>
+        </div>
+        <div class="type-content">
+          <span class="type-label">Le mie schede</span>
+          <span class="type-description">Schede personalizzate e importate</span>
+        </div>
+        <span class="type-chevron" aria-hidden="true">›</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- LIVELLO 2d: SOTTOMENU LE MIE SCHEDE -->
+<div class="screen" id="sub-mie-schede">
+  <div class="top-bar">
+    <button class="back-btn" onclick="showScreen('sub-programma')">‹</button>
+    <h2>Le mie schede</h2>
+  </div>
+  <div class="workout-sheet-selector route-custom-panel">
+    <div class="custom-sheets-header-row">
+      <p class="selector-intro">Schede salvate nell'archivio</p>
+      <button type="button" class="quick-new-sheet-btn" onclick="openNewSheetEditor()">+ Nuova scheda</button>
+    </div>
+    <div id="pwa-custom-sheets-list" class="workout-sheet-buttons">
+      <!-- Popolato dinamicamente da script.js -->
+    </div>
+  </div>
+</div>
+
+<!-- LIVELLO 2b: SOTTOMENU SPINTA -->
+<div class="screen" id="sub-spinta">
+  <div class="top-bar">
+    <button class="back-btn" onclick="showScreen('sub-programma')">‹</button>
+    <h2>Spinta</h2>
+  </div>
+  <div class="workout-sheet-selector route-push-panel">
+    <p class="selector-intro">Scegli la scheda di spinta</p>
+    <div class="workout-sheet-buttons">
+    <button class="workout-sheet-btn route-push" onclick="openWorkoutFromCalendar('spinta-1') && showScreen('spinta-1')">
+      <span class="sheet-icon icon-push">1</span>
+      <span class="sheet-info">
+        <span class="sheet-label">Spinta 1</span>
+        <span class="sheet-description">Variante A</span>
+      </span>
+      <span class="chevron">›</span>
+    </button>
+    <button class="workout-sheet-btn route-push" onclick="openWorkoutFromCalendar('spinta-2') && showScreen('spinta-2')">
+      <span class="sheet-icon icon-push">2</span>
+      <span class="sheet-info">
+        <span class="sheet-label">Spinta 2</span>
+        <span class="sheet-description">Variante B</span>
+      </span>
+      <span class="chevron">›</span>
+    </button>
+    </div>
+  </div>
+</div>
+
+<!-- LIVELLO 2c: SOTTOMENU TIRATA -->
+<div class="screen" id="sub-tirata">
+  <div class="top-bar">
+    <button class="back-btn" onclick="showScreen('sub-programma')">‹</button>
+    <h2>Tirata</h2>
+  </div>
+  <div class="workout-sheet-selector route-pull-panel">
+    <p class="selector-intro">Scegli la scheda di tirata</p>
+    <div class="workout-sheet-buttons">
+    <button class="workout-sheet-btn route-pull" onclick="openWorkoutFromCalendar('tirata-1') && showScreen('tirata-1')">
+      <span class="sheet-icon icon-pull">1</span>
+      <span class="sheet-info">
+        <span class="sheet-label">Tirata 1</span>
+        <span class="sheet-description">Variante A</span>
+      </span>
+      <span class="chevron">›</span>
+    </button>
+    <button class="workout-sheet-btn route-pull" onclick="openWorkoutFromCalendar('tirata-2') && showScreen('tirata-2')">
+      <span class="sheet-icon icon-pull">2</span>
+      <span class="sheet-info">
+        <span class="sheet-label">Tirata 2</span>
+        <span class="sheet-description">Variante B</span>
+      </span>
+      <span class="chevron">›</span>
+    </button>
+    <button class="workout-sheet-btn route-pull" onclick="openWorkoutFromCalendar('tirata-3') && showScreen('tirata-3')">
+      <span class="sheet-icon icon-pull">3</span>
+      <span class="sheet-info">
+        <span class="sheet-label">Tirata 3</span>
+        <span class="sheet-description">Variante C</span>
+      </span>
+      <span class="chevron">›</span>
+    </button>
+    <button class="workout-sheet-btn route-pull" onclick="openWorkoutFromCalendar('tirata-4') && showScreen('tirata-4')">
+      <span class="sheet-icon icon-pull">4</span>
+      <span class="sheet-info">
+        <span class="sheet-label">Tirata 4</span>
+        <span class="sheet-description">Variante D</span>
+      </span>
+      <span class="chevron">›</span>
+    </button>
+    </div>
+  </div>
+</div>
+
+<!-- LIVELLO 3: SCHEDE SPINTA -->
+<div class="screen" id="spinta-1" data-sheet-id="spinta-1">
+  <div class="top-bar">
+    <button class="back-btn" onclick="showScreen('sub-spinta')">‹</button>
+    <h2>Spinta 1</h2>
+    <button type="button" class="top-bar-action-btn" onclick="openSheetInEditor('spinta-1')">✏️ Modifica</button>
+  </div>
+
+  <div class="exercise-list">
+    <div class="exercise">
+      <div class="ex-head">
+        <div class="ex-num">1</div>
+        <div class="ex-title-wrap">
+          <div class="name">Piegamenti in verticale a mani strette e con rialzo sotto la testa</div>
+          <span class="badge">6 x 3</span>
+        </div>
+      </div>
+      <div class="ex-note"><b>Note:</b> useremo un rialzo sotto la testa per ridurre il ROM e rendere fattibile l'esercizio: ogni volta che le serie saranno completate con successo andiamo a ridurre il dislivello, sino appunto ad arrivare ad eseguire l'esercizio senza rialzo sotto la testa. Gli altri esercizi sono per aumentare il volume fatto, che altrimenti sarebbe troppo esiguo.</div>
+      <div class="ex-meta"><span>Riposo serie: <b>2' 30&quot;</b></span><span>Riposo fine esercizio: <b>2' 30&quot;</b></span></div>
+    </div>
+    <div class="exercise">
+      <div class="ex-head">
+        <div class="ex-num">2</div>
+        <div class="ex-title-wrap">
+          <div class="name">Piegamenti in verticale a mani larghe e con mano su rialzo basso</div>
+          <span class="badge">5 x 5</span>
+        </div>
+      </div>
+      <div class="ex-meta"><span>Riposo serie: <b>2' 30&quot;</b></span><span>Riposo fine esercizio: <b>2' 30&quot;</b></span></div>
+    </div>
+    <div class="exercise" data-exercise-id="dip-incremento" data-dip-increment="1" data-ladder-rest-per-rep="30" data-ladder-rest-max="90">
+      <div class="ex-head">
+        <div class="ex-num">3</div>
+        <div class="ex-title-wrap">
+          <div class="name">Dip A incremento da 1</div>
+          <span class="badge">Piramidale</span>
+        </div>
+      </div>
+      <div class="ex-note"><b>Note:</b> &quot;L'incremento da 1 con discesa&quot;: 1ª serie (1 rep) con 30&quot; di riposo, 2ª serie (2 rep) con 1' (60&quot;) di riposo, 3ª serie (3 rep) con 1' 30&quot; (90&quot;) di riposo. Dalla 3ª serie in poi il timer si blocca a 1' 30&quot; sia salendo che per tutta la discesa sino ad 1 rep.</div>
+      <div class="ex-meta"><span>Riposo serie: <b>30&quot; / 1' / 1' 30&quot; max</b></span><span>Riposo fine esercizio: <b>2' 30&quot;</b></span></div>
+    </div>
+    <div class="exercise">
+      <div class="ex-head">
+        <div class="ex-num">4</div>
+        <div class="ex-title-wrap">
+          <div class="name">Piegamenti a terra rialzo sotto il petto da 8 cm</div>
+          <span class="badge">1 x Max</span>
+        </div>
+      </div>
+      <div class="ex-meta"><span></span><span>Riposo fine esercizio: <b>2' 30&quot;</b></span></div>
+    </div>
+    <div class="exercise">
+      <div class="ex-head">
+        <div class="ex-num">5</div>
+        <div class="ex-title-wrap">
+          <div class="name">Piegamenti a terra</div>
+          <span class="badge">5 x Max/2 Prec</span>
+        </div>
+      </div>
+      <div class="ex-note"><b>Note:</b> con un massimale di piegamenti su rialzo, seguiti dai piegamenti a terra, in cui si eseguono metà delle ripetizioni del massimale appena fatto nell'esercizio precedente (l'indicazione Max/2 Prec).</div>
+      <div class="ex-meta"><span>Riposo serie: <b>1' 30&quot;</b></span><span>Riposo fine esercizio: <b>2' 30&quot;</b></span></div>
+    </div>
+    <div class="exercise">
+      <div class="ex-head">
+        <div class="ex-num">6</div>
+        <div class="ex-title-wrap">
+          <div class="name">Barchetta</div>
+          <span class="badge">5 x 20&quot;</span>
+        </div>
+      </div>
+      <div class="ex-meta"><span>Riposo serie: <b>1' 30&quot;</b></span><span>Riposo fine esercizio: <b>2' 30&quot;</b></span></div>
+    </div>
+  </div>
+</div>
+
+<div class="screen" id="spinta-2" data-sheet-id="spinta-2">
+  <div class="top-bar">
+    <button class="back-btn" onclick="showScreen('sub-spinta')">‹</button>
+    <h2>Spinta 2</h2>
+    <button type="button" class="top-bar-action-btn" onclick="openSheetInEditor('spinta-2')">✏️ Modifica</button>
+  </div>
+
+  <div class="exercise-list">
+    <div class="exercise">
+      <div class="ex-head">
+        <div class="ex-num">1</div>
+        <div class="ex-title-wrap">
+          <div class="name">Piegamenti in verticale a mani strette</div>
+          <span class="badge">1xMax 4xMax/2</span>
+        </div>
+      </div>
+      <div class="ex-meta"><span>Riposo serie Max: <b>3' 30&quot;</b> | serie: <b>2' 00&quot;</b></span><span>Riposo fine esercizio: <b>2' 30&quot;</b></span></div>
+    </div>
+    <div class="exercise">
+      <div class="ex-head">
+        <div class="ex-num">2</div>
+        <div class="ex-title-wrap">
+          <div class="name">Dip</div>
+          <span class="badge">1 x Max</span>
+        </div>
+      </div>
+      <div class="ex-meta"><span></span><span>Riposo fine esercizio: <b>2' 30&quot;</b></span></div>
+    </div>
+    <div class="exercise" data-exercise-type="piramidale" data-has-groups="true" data-total-sets="4">
+      <div class="ex-head">
+        <div class="ex-num">3</div>
+        <div class="ex-title-wrap">
+          <div class="name">Piegamenti a terra rialzo sotto il petto da 4 cm</div>
+          <span class="badge">4 X (12-16-20-16-12)</span>
+        </div>
+      </div>
+      <div class="ex-meta"><span>Riposo gradino: <b>20&quot;</b></span><span>Riposo tra i gruppi: <b>2' 00&quot;</b></span><span>Riposo fine esercizio: <b>2' 30&quot;</b></span></div>
+    </div>
+    <div class="exercise" data-exercise-type="reps_totali" data-target-total-reps="30">
+      <div class="ex-head">
+        <div class="ex-num">4</div>
+        <div class="ex-title-wrap">
+          <div class="name">Piegamenti a diamante</div>
+          <span class="badge">30 Reps Totali</span>
+        </div>
+      </div>
+      <div class="ex-note"><b>Note:</b> quando impieghi meno di 6' aumenta di 10 rep.</div>
+      <div class="ex-meta"><span>Riposo: <b>a scelta</b></span><span>Riposo fine esercizio: <b>2' 30&quot;</b></span></div>
+    </div>
+    <div class="exercise">
+      <div class="ex-head">
+        <div class="ex-num">5</div>
+        <div class="ex-title-wrap">
+          <div class="name">Tuck dragon flag</div>
+          <span class="badge">5 x 7</span>
+        </div>
+      </div>
+      <div class="ex-meta"><span>Riposo tra serie: <b>1' 30&quot;</b></span><span>Riposo fine esercizio: <b>2' 30&quot;</b></span></div>
+    </div>
+  </div>
+</div>
+
+<div class="exercise-list"></div>
+</div>
+
+<!-- LIVELLO 3: SCHEDE TIRATA -->
+<div class="screen" id="tirata-1" data-sheet-id="tirata-1">
+  <div class="top-bar">
+    <button class="back-btn" onclick="showScreen('sub-tirata')">‹</button>
+    <h2>Tirata 1 - Volume</h2>
+    <button type="button" class="top-bar-action-btn" onclick="openSheetInEditor('tirata-1')">✏️ Modifica</button>
+  </div>
+  <div class="ex-note programming-note"><b>Note programmazione:</b> da seguire in questo modo 3 settimane di volume poi 2 settimane di intensità.</div>
+  <div class="exercise-list">
+    <div class="exercise" data-exercise-id="trazioni-ladder" data-increment-ladder="1" data-ladder-rest-per-rep="30" data-ladder-rest-max="90" data-ladder-descent="true">
+      <div class="ex-head">
+        <div class="ex-num">1</div>
+        <div class="ex-title-wrap">
+          <div class="name">Trazioni prone al mento alternate mezzo ROM e ROM</div>
+          <span class="badge">Ladder 1 (Salita e Discesa)</span>
+        </div>
+      </div>
+      <div class="ex-note"><b>Note:</b> &quot;L'incremento da 1 con discesa&quot;: 1ª serie (1 rep) con 30&quot; di riposo, 2ª serie (2 rep) con 1' (60&quot;) di riposo, 3ª serie (3 rep) con 1' 30&quot; (90&quot;) di riposo. Dalla 3ª serie in poi il timer si blocca a 1' 30&quot; sia salendo che per tutta la discesa sino ad 1 rep.</div>
+      <div class="ex-meta"><span>Riposo serie: <b>30&quot; / 1' / 1' 30&quot; max</b></span><span>Riposo fine esercizio: <b>2' 30&quot;</b></span></div>
+    </div>
+    <div class="exercise">
+      <div class="ex-head">
+        <div class="ex-num">2</div>
+        <div class="ex-title-wrap">
+          <div class="name">Trazioni supine</div>
+          <span class="badge">30 Reps Totali tecniche</span>
+        </div>
+      </div>
+      <div class="ex-note"><b>Note:</b> 1&quot; fermo a metà e in alto.</div>
+      <div class="ex-meta"><span>Riposo serie: <b>90&quot;</b></span><span>Riposo fine esercizio: <b>2' 30&quot;</b></span></div>
+    </div>
+    <div class="exercise">
+      <div class="ex-head">
+        <div class="ex-num">3</div>
+        <div class="ex-title-wrap">
+          <div class="name">Tuck Front Lever</div>
+          <span class="badge">4 x Max (sec)</span>
+        </div>
+      </div>
+      <div class="ex-meta"><span>Riposo serie: <b>90&quot;</b></span><span>Riposo fine esercizio: <b>2' 30&quot;</b></span></div>
+    </div>
+    <div class="exercise">
+      <div class="ex-head">
+        <div class="ex-num">4</div>
+        <div class="ex-title-wrap">
+          <div class="name">Tuck Front Lever raise</div>
+          <span class="badge">4 x Max/2 Prec</span>
+        </div>
+      </div>
+      <div class="ex-meta"><span>Riposo tra serie: <b>90&quot;</b></span><span>Riposo fine esercizio: <b>2' 30&quot;</b></span></div>
+    </div>
+    <div class="exercise">
+      <div class="ex-head">
+        <div class="ex-num">5</div>
+        <div class="ex-title-wrap">
+          <div class="name">Leg raise o Dragon flag</div>
+          <span class="badge">4 x Max</span>
+        </div>
+      </div>
+      <div class="ex-meta"><span>Riposo tra serie: <b>90&quot;</b></span><span>Riposo fine esercizio: <b>2' 30&quot;</b></span></div>
+    </div>
+  </div>
+</div>
+
+<div class="screen" id="tirata-2" data-sheet-id="tirata-2">
+  <div class="top-bar">
+    <button class="back-btn" onclick="showScreen('sub-tirata')">‹</button>
+    <h2>Tirata 2 - Volume</h2>
+    <button type="button" class="top-bar-action-btn" onclick="openSheetInEditor('tirata-2')">✏️ Modifica</button>
+  </div>
+
+  <div class="exercise-list">
+    <div class="exercise">
+      <div class="ex-head">
+        <div class="ex-num">1</div>
+        <div class="ex-title-wrap">
+          <div class="name">Trazioni prone al mento</div>
+          <span class="badge">6 x 4</span>
+        </div>
+      </div>
+      <div class="ex-note"><b>Note:</b> 2&quot; fermo a metà.</div>
+      <div class="ex-meta"><span>Riposo serie: <b>1' 30&quot;</b></span><span>Riposo fine esercizio: <b>2' 30&quot;</b></span></div>
+    </div>
+    <div class="exercise">
+      <div class="ex-head">
+        <div class="ex-num">2</div>
+        <div class="ex-title-wrap">
+          <div class="name">Trazioni presa larga al mento</div>
+          <span class="badge">2 x Max</span>
+        </div>
+      </div>
+      <div class="ex-meta"><span>Riposo serie: <b>2' 00&quot;</b></span><span>Riposo fine esercizio: <b>2' 30&quot;</b></span></div>
+    </div>
+    <div class="exercise">
+      <div class="ex-head">
+        <div class="ex-num">3</div>
+        <div class="ex-title-wrap">
+          <div class="name">Tuck Back Lever</div>
+          <span class="badge">3 x 20&quot;</span>
+        </div>
+      </div>
+      <div class="ex-meta"><span>Riposo serie: <b>1' 30&quot;</b></span><span>Riposo fine esercizio: <b>2' 30&quot;</b></span></div>
+    </div>
+    <div class="exercise">
+      <div class="ex-head">
+        <div class="ex-num">4</div>
+        <div class="ex-title-wrap">
+          <div class="name">Australian pull up</div>
+          <span class="badge">2 x Max</span>
+        </div>
+      </div>
+      <div class="ex-meta"><span>Riposo serie: <b>1' 30&quot;</b></span><span>Riposo fine esercizio: <b>2' 30&quot;</b></span></div>
+    </div>
+    <div class="exercise">
+      <div class="ex-head">
+        <div class="ex-num">5</div>
+        <div class="ex-title-wrap">
+          <div class="name">Barchetta</div>
+          <span class="badge">4 x 20&quot;</span>
+        </div>
+      </div>
+      <div class="ex-meta"><span>Riposo tra serie: <b>1' 30&quot;</b></span><span>Riposo fine esercizio: <b>2' 30&quot;</b></span></div>
+    </div>
+  </div>
+</div>
+
+<div class="screen" id="tirata-3" data-sheet-id="tirata-3">
+  <div class="top-bar">
+    <button class="back-btn" onclick="showScreen('sub-tirata')">‹</button>
+    <h2>Tirata 3</h2>
+    <button type="button" class="top-bar-action-btn" onclick="openSheetInEditor('tirata-3')">✏️ Modifica</button>
+  </div>
+  <div class="exercise-list"></div>
+</div>
+
+<div class="screen" id="tirata-4" data-sheet-id="tirata-4">
+  <div class="top-bar">
+    <button class="back-btn" onclick="showScreen('sub-tirata')">‹</button>
+    <h2>Tirata 4</h2>
+    <button type="button" class="top-bar-action-btn" onclick="openSheetInEditor('tirata-4')">✏️ Modifica</button>
+  </div>
+  <div class="exercise-list"></div>
+</div>
+
+<!-- LIVELLO 3: SCHEDA PERSONALIZZATA (PLAYER NATIVO) -->
+<div class="screen" id="custom-workout">
+  <div class="top-bar">
+    <button class="back-btn" id="customWorkoutBackBtn" onclick="showScreen('sub-mie-schede')">‹</button>
+    <h2 id="customWorkoutTitle">Scheda personalizzata</h2>
+    <button type="button" class="top-bar-action-btn" id="editCustomWorkoutBtn">✏️ Modifica</button>
+  </div>
+  <div class="exercise-list" id="customWorkoutExerciseList"></div>
+</div>
+
+<!-- MODALE ZOOM PER LE IMMAGINI -->
+<div id="imageModal" class="image-modal" onclick="closeZoom()">
+  <img id="modalImg" src="" alt="Scheda ingrandita">
+</div>
+
+<script src="workout-editor/workout-validation.js?v=42"></script>
+<script src="workout-editor/workout-storage.js?v=42"></script>
+<script src="script.js?v=42"></script>
+<script src="calendar-home.js?v=42"></script>
+</body>
+</html>

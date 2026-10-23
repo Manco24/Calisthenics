@@ -1,0 +1,17 @@
+# Cartella con file solo locali / test / documentazione non destinata a GitHub Pages
+_NON_CARICARE_SU_GITHUB/
+
+# Dipendenze Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Agente AI e cache editor
+.agent/
+.vscode/
+*.code-workspace
+
+# File temporanei di sistema
+.DS_Store
+Thumbs.db
